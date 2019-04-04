@@ -126,10 +126,10 @@ def train(config):
 
     ######### Load Model #########
     model = load_model(config)
-    weights_file = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
-    if(os.path.isfile(weights_file)):
-        print "loading weights from file "+weights_file
-        model.load_weights(weights_file)
+    to_load_weights_file_ = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
+    if(os.path.isfile(to_load_weights_file_)):
+        print "loading weights from file "+to_load_weights_file_
+        model.load_weights(to_load_weights_file_)
 
     loss = []
     for lobj in config['losses']:
