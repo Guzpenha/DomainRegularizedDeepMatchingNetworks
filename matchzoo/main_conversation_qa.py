@@ -21,7 +21,8 @@ from utils import *
 import inputs
 import metrics
 from losses import *
-
+from IPython import embed
+import os.path
 
 def load_model(config):
     global_conf = config["global"]
@@ -125,6 +126,10 @@ def train(config):
 
     ######### Load Model #########
     model = load_model(config)
+    weights_file = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
+    if(os.path.isfile(weights_file)):
+        print "loading weights from file "+weights_file
+        model.load_weights(weights_file)
 
     loss = []
     for lobj in config['losses']:
