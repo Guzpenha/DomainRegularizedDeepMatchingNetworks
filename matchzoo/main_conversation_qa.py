@@ -53,7 +53,8 @@ def train(config):
     # read input config
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
-
+    if not share_input_conf['predict_ood']:
+        input_conf.pop('predict_ood', None)
 
     # collect embedding
     if 'embed_path' in share_input_conf:
@@ -100,6 +101,14 @@ def train(config):
             datapath = input_conf[tag]['qa_comat_file']
             if datapath not in dataset:
                 dataset[datapath] = read_qa_comat(datapath)
+        if 'text1_corpus_ood' in input_conf[tag]:
+            datapath = input_conf[tag]['text1_corpus_ood']
+            if datapath not in dataset:
+                dataset[datapath] = read_data_2d(datapath)
+        if 'text2_corpus_ood' in input_conf[tag]:
+            datapath = input_conf[tag]['text2_corpus_ood']
+            if datapath not in dataset:
+                dataset[datapath] = read_data_2d(datapath)  
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
@@ -119,6 +128,8 @@ def train(config):
         print conf
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
+        conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
+        conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
         if 'qa_comat_file' in share_input_conf:
             conf['qa_comat'] = dataset[conf['qa_comat_file']]
         generator = inputs.get(conf['input_type'])
@@ -168,7 +179,8 @@ def train(config):
             num_valid = 0
             for input_data, y_true in genfun:
                 y_pred = model.predict(input_data, batch_size=len(y_true))
-                if issubclass(type(generator), inputs.list_generator.ListBasicGenerator):
+                if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or \
+                    issubclass(type(generator), inputs.list_generator.ListOODGenerator) :
                     list_counts = input_data['list_counts']
                     for k, eval_func in eval_metrics.items():
                         for lc_idx in range(len(list_counts)-1):
@@ -192,6 +204,8 @@ def predict(config):
     print(json.dumps(config, indent=2))
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
+    if not share_input_conf['predict_ood']:
+        input_conf.pop('predict_ood', None)
 
     # collect embedding
     if 'embed_path' in share_input_conf:
@@ -232,6 +246,14 @@ def predict(config):
                 datapath = input_conf[tag]['qa_comat_file']
                 if datapath not in dataset:
                     dataset[datapath] = read_qa_comat(datapath)
+            if 'text1_corpus_ood' in input_conf[tag]:
+                datapath = input_conf[tag]['text1_corpus_ood']
+                if datapath not in dataset:
+                    dataset[datapath] = read_data_2d(datapath)
+            if 'text2_corpus_ood' in input_conf[tag]:
+                datapath = input_conf[tag]['text2_corpus_ood']
+                if datapath not in dataset:
+                    dataset[datapath] = read_data_2d(datapath)            
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
@@ -241,6 +263,8 @@ def predict(config):
         print conf
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
+        conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
+        conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
         if 'qa_comat_file' in share_input_conf:
             conf['qa_comat'] = dataset[conf['qa_comat_file']]
         generator = inputs.get(conf['input_type'])
@@ -258,6 +282,7 @@ def predict(config):
 
     model = load_model(config)
     model.load_weights(weights_file)
+    print ('Model loaded')
 
     eval_metrics = OrderedDict()
     for mobj in config['metrics']:
@@ -275,9 +300,9 @@ def predict(config):
         num_valid = 0
         res_scores = {}
         for input_data, y_true in genfun:
-            y_pred = model.predict(input_data, batch_size=len(y_true) )
-
-            if issubclass(type(generator), inputs.list_generator.ListBasicGenerator):
+            y_pred = model.predict(input_data, batch_size=len(y_true))
+            if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
+                issubclass(type(generator), inputs.list_generator.ListOODGenerator):
                 list_counts = input_data['list_counts']
                 for k, eval_func in eval_metrics.items():
                     for lc_idx in range(len(list_counts)-1):
@@ -352,6 +377,7 @@ def main(argv):
     parser.add_argument('--cross_matrix', help='cross_matrix: parameters for model abalation')
     parser.add_argument('--inter_type', help='inter_type: parameters for model abalation')
     parser.add_argument('--test_weights_iters', help='test_weights_iters: the iteration of test weights file used')
+    parser.add_argument('--predict_ood', help='whether to predict on out-of-domain or not')
 
 
     args = parser.parse_args()
@@ -384,7 +410,10 @@ def main(argv):
         cross_matrix = args.cross_matrix
         inter_type = args.inter_type
         test_weights_iters = args.test_weights_iters
+        predict_ood = args.predict_ood
 
+        if predict_ood != None:
+            config['inputs']['share']['predict_ood'] = predict_ood
         if embed_size != None:
             config['inputs']['share']['embed_size'] = int(embed_size)
         if embed_path != None:
