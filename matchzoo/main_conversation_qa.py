@@ -53,8 +53,6 @@ def train(config):
     # read input config
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
-    if not share_input_conf['predict_ood']:
-        input_conf.pop('predict_ood', None)
 
     # collect embedding
     if 'embed_path' in share_input_conf:
@@ -173,6 +171,8 @@ def train(config):
             print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])
 
         for tag, generator in eval_gen.items():
+            if not share_input_conf['predict_ood'] and tag == "ood":
+                continue
             genfun = generator.get_batch_generator()
             print '[%s]\t[Eval:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
             res = dict([[k,0.] for k in eval_metrics.keys()])
@@ -204,8 +204,6 @@ def predict(config):
     print(json.dumps(config, indent=2))
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
-    if not share_input_conf['predict_ood']:
-        input_conf.pop('predict_ood', None)
 
     # collect embedding
     if 'embed_path' in share_input_conf:
@@ -300,6 +298,8 @@ def predict(config):
         num_valid = 0
         res_scores = {}
         for input_data, y_true in genfun:
+            if not share_input_conf['predict_ood'] and tag == "predict_ood":
+                continue
             y_pred = model.predict(input_data, batch_size=len(y_true))
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator):
