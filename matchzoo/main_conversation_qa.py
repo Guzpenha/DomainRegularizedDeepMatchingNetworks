@@ -156,6 +156,9 @@ def train(config):
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
     print '[Model] Model Compile Done.'
+    
+    if share_input_conf['predict_ood'] == 'False':
+        del eval_gen['ood']
 
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
@@ -171,8 +174,6 @@ def train(config):
             print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])
 
         for tag, generator in eval_gen.items():
-            if not share_input_conf['predict_ood'] and tag == "ood":
-                continue
             genfun = generator.get_batch_generator()
             print '[%s]\t[Eval:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
             res = dict([[k,0.] for k in eval_metrics.keys()])
@@ -290,16 +291,18 @@ def predict(config):
             eval_metrics[mobj] = metrics.get(mt_key)(int(mt_val))
         else:
             eval_metrics[mobj] = metrics.get(mobj)
-    res = dict([[k,0.] for k in eval_metrics.keys()])
+
+
+    if share_input_conf['predict_ood'] == 'False':
+        del predict_gen['predict_ood']
 
     for tag, generator in predict_gen.items():
+        res = dict([[k,0.] for k in eval_metrics.keys()])
         genfun = generator.get_batch_generator()
         print '[%s]\t[Predict] @ %s ' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
         num_valid = 0
         res_scores = {}
         for input_data, y_true in genfun:
-            if not share_input_conf['predict_ood'] and tag == "predict_ood":
-                continue
             y_pred = model.predict(input_data, batch_size=len(y_true))
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator):
