@@ -159,6 +159,13 @@ def train(config):
     if share_input_conf['predict_ood'] == 'False':
         del eval_gen['ood']
 
+    if(share_input_conf['predict'] == 'False'):
+        del eval_gen['ood']
+        del eval_gen['test']
+        del eval_gen['valid']
+
+    print(eval_gen)
+
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
@@ -172,30 +179,29 @@ def train(config):
                 ) #callbacks=[eval_map])
             print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])        
 
-        if(share_input_conf['predict']):            
-            for tag, generator in eval_gen.items():
-                genfun = generator.get_batch_generator()
-                print '[%s]\t[Eval:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
-                res = dict([[k,0.] for k in eval_metrics.keys()])
-                num_valid = 0
-                for input_data, y_true in genfun:
-                    y_pred = model.predict(input_data, batch_size=len(y_true))
-                    if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or \
-                        issubclass(type(generator), inputs.list_generator.ListOODGenerator) :
-                        list_counts = input_data['list_counts']
-                        for k, eval_func in eval_metrics.items():
-                            for lc_idx in range(len(list_counts)-1):
-                                pre = list_counts[lc_idx]
-                                suf = list_counts[lc_idx+1]
-                                res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                        num_valid += len(list_counts) - 1
-                    else:
-                        for k, eval_func in eval_metrics.items():
-                            res[k] += eval_func(y_true = y_true, y_pred = y_pred)
-                        num_valid += 1
-                generator.reset()
-                print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
-                sys.stdout.flush()
+        for tag, generator in eval_gen.items():
+            genfun = generator.get_batch_generator()
+            print '[%s]\t[Eval:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
+            res = dict([[k,0.] for k in eval_metrics.keys()])
+            num_valid = 0
+            for input_data, y_true in genfun:
+                y_pred = model.predict(input_data, batch_size=len(y_true))
+                if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or \
+                    issubclass(type(generator), inputs.list_generator.ListOODGenerator) :
+                    list_counts = input_data['list_counts']
+                    for k, eval_func in eval_metrics.items():
+                        for lc_idx in range(len(list_counts)-1):
+                            pre = list_counts[lc_idx]
+                            suf = list_counts[lc_idx+1]
+                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                    num_valid += len(list_counts) - 1
+                else:
+                    for k, eval_func in eval_metrics.items():
+                        res[k] += eval_func(y_true = y_true, y_pred = y_pred)
+                    num_valid += 1
+            generator.reset()
+            print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
+            sys.stdout.flush()
         if (i_e+1) % save_weights_iters == 0:
             model.save_weights(weights_file % (i_e+1))
 
