@@ -6,6 +6,7 @@ import numpy as np
 from utils.rank_io import *
 from layers import DynamicMaxPooling
 import scipy.sparse as sp
+from IPython import embed
 
 class PairBasicGenerator(object):
     def __init__(self, config):
@@ -518,6 +519,112 @@ class DMN_PairGenerator(PairBasicGenerator):
         for i in range(self.batch_size):
             #print 'get_batch_static test i = ', i
             d1, d2p, d2n = random.choice(self.pair_list)
+            # print 'd1, d2p, d2n  = ', d1, d2p, d2n
+            # print 'self.data2[d2p] = ', self.data2[d2p]
+            if len(self.data2[d2p]) == 0:
+                d2p_ws = [self.fill_word]
+            else:
+                d2p_ws = self.data2[d2p][0].split()
+            if len(self.data2[d2n]) == 0:
+                d2n_ws = [self.fill_word]
+            else:
+                d2n_ws = self.data2[d2n][0].split()
+            d2p_len = min(self.data2_maxlen, len(d2p_ws))
+            d2n_len = min(self.data2_maxlen, len(d2n_ws))
+            # print 'self.data1[d1] = ', self.data1[d1]
+            # print 'd2p_len, d2n_len  = ', d2p_len, d2n_len
+            # print 'data2[d2p], data2[d2n]  = ', self.data2[d2p], self.data2[d2n]
+            X2[i * 2, :d2p_len], X2_len[i * 2] = d2p_ws[:d2p_len], d2p_len
+            X2[i * 2 + 1, :d2n_len], X2_len[i * 2 + 1] = d2n_ws[:d2n_len], d2n_len
+            # if len(self.data1[d1]) > 10, we only keep the most recent 10 utterances
+            utt_start = 0 if len(self.data1[d1]) < self.data1_max_utt_num else (len(self.data1[d1])-self.data1_max_utt_num)
+            # print 'test utt_start ', utt_start
+            # print 'test len(self.data1[d1]) ', len(self.data1[d1])
+            for j in range(utt_start, len(self.data1[d1])):
+                # print 'test j ', j
+                # print 'test utt_start ', utt_start
+                d1_ws = self.data1[d1][j].split()
+                d1_len = min(self.data1_maxlen, len(d1_ws))
+                X1[i*2, j-utt_start, :d1_len],  X1_len[i*2, j-utt_start]   = d1_ws[:d1_len], d1_len
+                X1[i*2+1, j-utt_start, :d1_len],  X1_len[i*2+1, j-utt_start] = d1_ws[:d1_len], d1_len
+        return X1, X1_len, X2, X2_len, Y
+
+    def get_batch_iter(self):
+        while True:
+            self.pair_list = self.pair_list_iter.next()
+            for _ in range(self.config['batch_per_iter']):
+                X1 = np.zeros((self.batch_size*2, self.data1_maxlen), dtype=np.int32)
+                X1_len = np.zeros((self.batch_size*2,), dtype=np.int32)
+                X2 = np.zeros((self.batch_size*2, self.data2_maxlen), dtype=np.int32)
+                X2_len = np.zeros((self.batch_size*2,), dtype=np.int32)
+                Y = np.zeros((self.batch_size*2,), dtype=np.int32)
+
+                Y[::2] = 1
+                X1[:] = self.fill_word
+                X2[:] = self.fill_word
+                for i in range(self.batch_size):
+                    d1, d2p, d2n = random.choice(self.pair_list)
+                    d1_len = min(self.data1_maxlen, len(self.data1[d1]))
+                    d2p_len = min(self.data2_maxlen, len(self.data2[d2p]))
+                    d2n_len = min(self.data2_maxlen, len(self.data2[d2n]))
+                    X1[i*2,   :d1_len],  X1_len[i*2]   = self.data1[d1][:d1_len],   d1_len
+                    X2[i*2,   :d2p_len], X2_len[i*2]   = self.data2[d2p][:d2p_len], d2p_len
+                    X1[i*2+1, :d1_len],  X1_len[i*2+1] = self.data1[d1][:d1_len],   d1_len
+                    X2[i*2+1, :d2n_len], X2_len[i*2+1] = self.data2[d2n][:d2n_len], d2n_len
+
+                yield X1, X1_len, X2, X2_len, Y
+
+    def get_batch_generator(self):
+        while True:
+            X1, X1_len, X2, X2_len, Y = self.get_batch()
+            if self.config['use_dpool']:
+                yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len, 'dpool_index': DynamicMaxPooling.dynamic_pooling_index(X1_len, X2_len, self.config['text1_maxlen'], self.config['text2_maxlen'])}, Y)
+            else:
+                yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len}, Y)
+
+class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
+    def __init__(self, config):
+        super(DMN_PairGeneratorMultipleDomains, self).__init__(config=config)
+        self.__name = 'DMN_PairGeneratorMultipleDomains'
+        self.config = config
+        self.data1 = config['data1']
+        self.data2 = config['data2']
+        self.data1_maxlen = config['text1_maxlen']
+        self.data1_max_utt_num = int(config['text1_max_utt_num'])
+        self.data2_maxlen = config['text2_maxlen']
+        self.fill_word = config['vocab_size'] - 1
+        self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen', 'text1_max_utt_num'])
+        if config['use_iter']:
+            self.batch_iter = self.get_batch_iter()
+        if not self.check():
+            raise TypeError('[DMN_PairGeneratorMultipleDomains] parameter check wrong.')
+
+        path = config['domain_splits_folder']
+        with open(path+'domain_splits_train') as f:
+            size = int(f.read())
+            self.train_domain_division = size
+        print '[DMN_PairGeneratorMultipleDomains] init done'
+
+    def get_batch_static(self):
+        X1 = np.zeros((self.batch_size*2, self.data1_max_utt_num, self.data1_maxlen), dtype=np.int32) # max 10 turns
+        X1_len = np.zeros((self.batch_size*2, self.data1_max_utt_num), dtype=np.int32) # max 10 turns
+        X2 = np.zeros((self.batch_size*2, self.data2_maxlen), dtype=np.int32)
+        X2_len = np.zeros((self.batch_size*2,), dtype=np.int32)
+        Y = np.zeros((self.batch_size*2,), dtype=np.int32)
+
+        Y[::2] = 1 # [1,0,1,0,1,0,...]
+        X1[:] = self.fill_word # the default word index is the last word, which is the added PAD word
+        X2[:] = self.fill_word
+        Y_domains = []
+        for i in range(self.batch_size):
+            #print 'get_batch_static test i = ', i
+            rand_idx = random.choice(range(len(self.pair_list)))
+            d1, d2p, d2n = self.pair_list[rand_idx]
+            #10 because we have 9 candidates for each true response
+            if(int(d1.split("Q")[1])<=self.train_domain_division/10):
+                Y_domains.append(0)
+            else:
+                Y_domains.append(1)            
             # print 'd1, d2p, d2n  = ', d1, d2p, d2n
             # print 'self.data2[d2p] = ', self.data2[d2p]
             if len(self.data2[d2p]) == 0:
