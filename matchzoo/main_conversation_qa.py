@@ -21,7 +21,6 @@ from utils import *
 import inputs
 import metrics
 from losses import *
-from IPython import embed
 import os.path
 
 def load_model(config):
@@ -171,31 +170,32 @@ def train(config):
                     shuffle=False,
                     verbose = 0
                 ) #callbacks=[eval_map])
-            print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])
+            print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])        
 
-        for tag, generator in eval_gen.items():
-            genfun = generator.get_batch_generator()
-            print '[%s]\t[Eval:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
-            res = dict([[k,0.] for k in eval_metrics.keys()])
-            num_valid = 0
-            for input_data, y_true in genfun:
-                y_pred = model.predict(input_data, batch_size=len(y_true))
-                if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or \
-                    issubclass(type(generator), inputs.list_generator.ListOODGenerator) :
-                    list_counts = input_data['list_counts']
-                    for k, eval_func in eval_metrics.items():
-                        for lc_idx in range(len(list_counts)-1):
-                            pre = list_counts[lc_idx]
-                            suf = list_counts[lc_idx+1]
-                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                    num_valid += len(list_counts) - 1
-                else:
-                    for k, eval_func in eval_metrics.items():
-                        res[k] += eval_func(y_true = y_true, y_pred = y_pred)
-                    num_valid += 1
-            generator.reset()
-            print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
-            sys.stdout.flush()
+        if(share_input_conf['predict']):            
+            for tag, generator in eval_gen.items():
+                genfun = generator.get_batch_generator()
+                print '[%s]\t[Eval:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
+                res = dict([[k,0.] for k in eval_metrics.keys()])
+                num_valid = 0
+                for input_data, y_true in genfun:
+                    y_pred = model.predict(input_data, batch_size=len(y_true))
+                    if issubclass(type(generator), issubclassnputs.list_generator.ListBasicGenerator) or \
+                        issubclass(type(generator), inputs.list_generator.ListOODGenerator) :
+                        list_counts = input_data['list_counts']
+                        for k, eval_func in eval_metrics.items():
+                            for lc_idx in range(len(list_counts)-1):
+                                pre = list_counts[lc_idx]
+                                suf = list_counts[lc_idx+1]
+                                res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                        num_valid += len(list_counts) - 1
+                    else:
+                        for k, eval_func in eval_metrics.items():
+                            res[k] += eval_func(y_true = y_true, y_pred = y_pred)
+                        num_valid += 1
+                generator.reset()
+                print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
+                sys.stdout.flush()
         if (i_e+1) % save_weights_iters == 0:
             model.save_weights(weights_file % (i_e+1))
 
@@ -381,6 +381,7 @@ def main(argv):
     parser.add_argument('--inter_type', help='inter_type: parameters for model abalation')
     parser.add_argument('--test_weights_iters', help='test_weights_iters: the iteration of test weights file used')
     parser.add_argument('--predict_ood', help='whether to predict on out-of-domain or not')
+    parser.add_argument('--predict', help='whether to predict (EVAL) on while training or not')
 
 
     args = parser.parse_args()
@@ -414,7 +415,10 @@ def main(argv):
         inter_type = args.inter_type
         test_weights_iters = args.test_weights_iters
         predict_ood = args.predict_ood
+        predict = args.predict
 
+        if predict != None:
+            config['inputs']['share']['predict'] = predict
         if predict_ood != None:
             config['inputs']['share']['predict_ood'] = predict_ood
         if embed_size != None:
