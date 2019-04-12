@@ -603,6 +603,18 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
         with open(path+'domain_splits_train') as f:
             size = int(f.read())
             self.train_domain_division = size
+
+        self.balanced_domain_batches = config['balanced_domain_batches']
+        if(self.balanced_domain_batches):            
+            self.d1_pair_list = []
+            self.d2_pair_list = []
+            for triplet in self.pair_list:
+                domain = (int(triplet[0].split("Q")[1])<=self.train_domain_division/10)
+                if(domain):
+                    self.d1_pair_list.append(triplet)
+                else:
+                    self.d2_pair_list.append(triplet)
+
         print '[DMN_PairGeneratorMultipleDomains] init done'
 
     def get_batch_static(self):
@@ -618,13 +630,20 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
         Y_domains = []
         for i in range(self.batch_size):
             #print 'get_batch_static test i = ', i
-            rand_idx = random.choice(range(len(self.pair_list)))
-            d1, d2p, d2n = self.pair_list[rand_idx]
-            #10 because we have 9 candidates for each true response
-            if(int(d1.split("Q")[1])<=self.train_domain_division/10):
-                Y_domains.append(0)
+            if(not self.balanced_domain_batches):
+                rand_idx = random.choice(range(len(self.pair_list)))
+                d1, d2p, d2n = self.pair_list[rand_idx]
+            elif(i<self.batch_size/2.0):
+                rand_idx = random.choice(range(len(self.d1_pair_list)))
+                d1, d2p, d2n = self.d1_pair_list[rand_idx]
             else:
-                Y_domains.append(1)            
+                rand_idx = random.choice(range(len(self.d2_pair_list)))
+                d1, d2p, d2n = self.d2_pair_list[rand_idx]
+
+            #10 because we have 9 candidates for each true response
+            domain = int(int(d1.split("Q")[1])<=self.train_domain_division/10)            
+
+            Y_domains.append(domain)
             # print 'd1, d2p, d2n  = ', d1, d2p, d2n
             # print 'self.data2[d2p] = ', self.data2[d2p]
             if len(self.data2[d2p]) == 0:
