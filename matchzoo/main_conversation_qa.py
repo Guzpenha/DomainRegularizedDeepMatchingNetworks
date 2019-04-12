@@ -160,7 +160,6 @@ def train(config):
         del eval_gen['ood']
 
     if(share_input_conf['predict'] == 'False'):
-        del eval_gen['ood']
         del eval_gen['test']
         del eval_gen['valid']
 
@@ -421,10 +420,10 @@ def main(argv):
         inter_type = args.inter_type
         test_weights_iters = args.test_weights_iters
         predict_ood = args.predict_ood
-        predict = args.predict
+        predict_eval = args.predict
 
-        if predict != None:
-            config['inputs']['share']['predict'] = predict
+        if predict_eval != None:
+            config['inputs']['share']['predict'] = predict_eval
         if predict_ood != None:
             config['inputs']['share']['predict_ood'] = predict_ood
         if embed_size != None:
