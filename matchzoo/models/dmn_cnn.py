@@ -115,6 +115,11 @@ class DMN_CNN(BasicModel):
         accum_stack_gru_hidden_flat_drop = Dropout(rate=self.config['dropout_rate'])(accum_stack_gru_hidden_flat)
         show_layer_info('Dropout', accum_stack_gru_hidden_flat_drop)
 
+        #Domain training
+        # if self.config['domain_mode'] == 'multi_task_learning':
+        out_domain = Dense(2, activation='softmax')(accum_stack_gru_hidden_flat_drop)
+        model_clf = Model(inputs=[query, doc], outputs=out_domain)
+
         # MLP
         if self.config['target_mode'] == 'classification':
             out_ = Dense(2, activation='softmax')(accum_stack_gru_hidden_flat_drop)
@@ -123,4 +128,4 @@ class DMN_CNN(BasicModel):
         show_layer_info('Dense', out_)
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         model = Model(inputs=[query, doc], outputs=out_)
-        return model
+        return model, model_clf

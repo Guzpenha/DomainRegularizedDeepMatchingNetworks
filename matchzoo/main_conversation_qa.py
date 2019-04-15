@@ -133,7 +133,7 @@ def train(config):
         eval_gen[tag] = generator( config = conf )
 
     ######### Load Model #########
-    model = load_model(config)
+    model, model_clf = load_model(config)
     to_load_weights_file_ = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
     if(os.path.isfile(to_load_weights_file_)):
         print "loading weights from file "+to_load_weights_file_
@@ -155,7 +155,9 @@ def train(config):
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
     print '[Model] Model Compile Done.'
-    
+    model_clf.compile(optimizer=optimizer,loss='categorical_crossentropy')
+    print '[Model] Domain classifier model Compile Done.'
+
     if share_input_conf['predict_ood'] == 'False':
         del eval_gen['ood']
 
@@ -164,12 +166,17 @@ def train(config):
         del eval_gen['valid']
 
     print(eval_gen)
-
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
             print '[%s]\t[Train:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
-            history = model.fit_generator(
+            
+            if(tag == "train_clf"):
+                correct_model = model_clf 
+            elif(tag == "train"):
+                correct_model = model
+
+            history = correct_model.fit_generator(
                     genfun,
                     steps_per_epoch = display_interval, # if display_interval = 10, then there are 10 batches in 1 epoch
                     epochs = 1,
