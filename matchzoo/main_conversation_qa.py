@@ -291,7 +291,7 @@ def predict(config):
     global_conf = config["global"]
     weights_file = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
 
-    model = load_model(config)
+    model, model_clf = load_model(config)
     model.load_weights(weights_file)
     print ('Model loaded')
 
