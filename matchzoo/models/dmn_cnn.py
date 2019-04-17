@@ -16,6 +16,7 @@ from keras.layers import *
 from keras.layers import Reshape, Embedding,Merge, Dot
 from keras.optimizers import Adam
 from model import BasicModel
+from flipGradientTF import GradientReversal
 
 import sys
 sys.path.append('../matchzoo/layers/')
@@ -116,8 +117,10 @@ class DMN_CNN(BasicModel):
         show_layer_info('Dropout', accum_stack_gru_hidden_flat_drop)
 
         #Domain training
-        # if self.config['domain_mode'] == 'multi_task_learning':
-        out_domain = Dense(2, activation='softmax')(accum_stack_gru_hidden_flat_drop)
+        Flip = GradientReversal(0.5, really_flip=False)
+        in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
+        out_domain = Dense(2, activation='softmax')(in_domain_clf)
+
         model_clf = Model(inputs=[query, doc], outputs=out_domain)
 
         # MLP
