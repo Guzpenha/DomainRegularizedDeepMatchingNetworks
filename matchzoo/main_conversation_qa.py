@@ -175,7 +175,10 @@ def train(config):
                 correct_model = model_clf 
             elif(tag == "train"):
                 correct_model = model
-
+            p = float(i_e) / num_iters
+            l = 2. / (1. + np.exp(-10. * p)) - 1
+            correct_model.l = l
+            print(correct_model.l)
             history = correct_model.fit_generator(
                     genfun,
                     steps_per_epoch = display_interval, # if display_interval = 10, then there are 10 batches in 1 epoch
