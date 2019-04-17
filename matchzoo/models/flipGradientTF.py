@@ -29,7 +29,7 @@ class GradientReversal(Layer):
     '''Flip the sign of gradient during training.'''
     def __init__(self, hp_lambda, really_flip=True, **kwargs):
         super(GradientReversal, self).__init__(**kwargs)
-        self.really_flip = True
+        self.really_flip = really_flip
         self.supports_masking = False
         self.hp_lambda = hp_lambda
 
