@@ -117,7 +117,7 @@ class DMN_CNN(BasicModel):
         show_layer_info('Dropout', accum_stack_gru_hidden_flat_drop)
 
         #Domain training
-        Flip = GradientReversal(0.5, really_flip=False)
+        Flip = GradientReversal(1, really_flip=False)
         in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
         out_domain = Dense(2, activation='softmax')(in_domain_clf)
 
