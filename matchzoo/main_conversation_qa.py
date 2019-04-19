@@ -323,7 +323,7 @@ def predict(config):
         genfun = generator.get_batch_generator()
         print '[%s]\t[Predict] @ %s ' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
         num_valid = 0
-             = {}
+        res_scores = {}
         for input_data, y_true in genfun:
             y_pred = model.predict(input_data, batch_size=len(y_true))
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
