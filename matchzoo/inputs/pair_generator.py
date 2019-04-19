@@ -587,6 +587,7 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
         super(DMN_PairGeneratorMultipleDomains, self).__init__(config=config)
         self.__name = 'DMN_PairGeneratorMultipleDomains'
         self.config = config
+        self.domain_to_train = config['domain_to_train']
         self.data1 = config['data1']
         self.data2 = config['data2']
         self.data1_maxlen = config['text1_maxlen']
@@ -630,7 +631,13 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
         Y_domain = []
         for i in range(self.batch_size):
             #print 'get_batch_static test i = ', i
-            if(not self.balanced_domain_batches):
+            if(self.domain_to_train == 0):
+                rand_idx = random.choice(range(len(self.d1_pair_list)))
+                d1, d2p, d2n = self.d1_pair_list[rand_idx]
+            elif(self.domain_to_train == 1):
+                rand_idx = random.choice(range(len(self.d2_pair_list)))
+                d1, d2p, d2n = self.d2_pair_list[rand_idx]
+            elif(not self.balanced_domain_batches):
                 rand_idx = random.choice(range(len(self.pair_list)))
                 d1, d2p, d2n = self.pair_list[rand_idx]
             elif(i<self.batch_size/2.0):
