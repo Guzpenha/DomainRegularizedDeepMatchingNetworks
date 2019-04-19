@@ -402,6 +402,8 @@ def main(argv):
     parser.add_argument('--predict_ood', help='whether to predict on out-of-domain or not')
     parser.add_argument('--predict', help='whether to predict (EVAL) on while training or not')
     parser.add_argument('--domain_training_type', help='wheter to use DMN-ADL, DMN-MTL or none')
+    parser.add_argument('--domain_to_train', help='train in only one source domain or all (-1)')
+    parser.add_argument('--num_iters', help='number of iters')
 
 
     args = parser.parse_args()
@@ -437,7 +439,13 @@ def main(argv):
         predict_ood = args.predict_ood
         predict_eval = args.predict
         domain_training_type = args.domain_training_type
+        domain_to_train = args.domain_to_train
+        num_iters = args.num_iters
 
+        if num_iters != None:
+            config['global']['num_iters'] = int(num_iters)
+        if domain_to_train != None:
+            config['inputs']['train']['domain_to_train'] = int(domain_to_train)
         if domain_training_type != None:
             config['inputs']['share']['domain_training_type'] = domain_training_type
         if predict_eval != None:
