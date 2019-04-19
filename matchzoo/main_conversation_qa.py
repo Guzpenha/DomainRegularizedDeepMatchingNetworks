@@ -311,6 +311,8 @@ def predict(config):
         else:
             eval_metrics[mobj] = metrics.get(mobj)
 
+    if share_input_conf['predict'] == 'False':
+        del predict_gen['predict']
 
     if share_input_conf['predict_ood'] == 'False':
         del predict_gen['predict_ood']
