@@ -79,7 +79,7 @@ def train(config):
             input_eval_conf[tag] = {}
             input_eval_conf[tag].update(share_input_conf)
             input_eval_conf[tag].update(input_conf[tag])
-    print '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
+    # print '[Input] Process Input Tags. %s in TRAIN, %s in EVAL.' % (input_train_conf.keys(), input_eval_conf.keys())
 
     # collect dataset identification
     dataset = {}
@@ -165,7 +165,12 @@ def train(config):
         del eval_gen['test']
         del eval_gen['valid']
 
+    if(share_input_conf["domain_training_type"] != "DMN-ADL" and \
+        share_input_conf["domain_training_type"] != "DMN-MTL"):
+        del train_gen['train_clf']
     print(eval_gen)
+    print(train_gen)
+
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
@@ -178,7 +183,6 @@ def train(config):
             p = float(i_e) / num_iters
             l = 2. / (1. + np.exp(-10. * p)) - 1
             correct_model.l = l
-            print(correct_model.l)
             history = correct_model.fit_generator(
                     genfun,
                     steps_per_epoch = display_interval, # if display_interval = 10, then there are 10 batches in 1 epoch
@@ -397,6 +401,7 @@ def main(argv):
     parser.add_argument('--test_weights_iters', help='test_weights_iters: the iteration of test weights file used')
     parser.add_argument('--predict_ood', help='whether to predict on out-of-domain or not')
     parser.add_argument('--predict', help='whether to predict (EVAL) on while training or not')
+    parser.add_argument('--domain_training_type', help='wheter to use DMN-ADL, DMN-MTL or none')
 
 
     args = parser.parse_args()
@@ -431,7 +436,10 @@ def main(argv):
         test_weights_iters = args.test_weights_iters
         predict_ood = args.predict_ood
         predict_eval = args.predict
+        domain_training_type = args.domain_training_type
 
+        if domain_training_type != None:
+            config['inputs']['share']['domain_training_type'] = domain_training_type
         if predict_eval != None:
             config['inputs']['share']['predict'] = predict_eval
         if predict_ood != None:

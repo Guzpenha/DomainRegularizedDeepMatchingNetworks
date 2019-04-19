@@ -117,8 +117,13 @@ class DMN_CNN(BasicModel):
         accum_stack_gru_hidden_flat_drop = Dropout(rate=self.config['dropout_rate'])(accum_stack_gru_hidden_flat)
         show_layer_info('Dropout', accum_stack_gru_hidden_flat_drop)
 
-        #Domain training
-        Flip = GradientReversal(self.l, really_flip=False)
+        #DMN-DAL or DMN-MTL
+        if(self.config["domain_training_type"] == "DMN-DAL"):
+            flip_grad = True
+        else: 
+            flip_grad = False
+
+        Flip = GradientReversal(self.l, really_flip=flip_grad)
         in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
         out_domain = Dense(2, activation='softmax')(in_domain_clf)
 
