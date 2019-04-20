@@ -329,8 +329,10 @@ def predict(config):
                     for lc_idx in range(len(list_counts)-1):
                         pre = list_counts[lc_idx]
                         suf = list_counts[lc_idx+1]
+                        # from IPython import embed
+                        # embed()
                         q_id = int(input_data['ID'][lc_idx][0].split("Q")[1])
-                        if(tag != "predict_in" or tag != "predict_out"):
+                        if(tag != "predict_in" and tag != "predict_out"):
                             res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
                             valids+=1
                         else:
