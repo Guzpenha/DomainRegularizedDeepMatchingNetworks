@@ -325,16 +325,21 @@ def predict(config):
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator):
                 list_counts = input_data['list_counts']
                 for k, eval_func in eval_metrics.items():
+                    valids = 0
                     for lc_idx in range(len(list_counts)-1):
                         pre = list_counts[lc_idx]
                         suf = list_counts[lc_idx+1]
                         q_id = int(input_data['ID'][lc_idx][0].split("Q")[1])
-                        if(tag == "predict_in" and q_id < first_q_out_of_domain):
+                        if(tag != "predict_in" or tag != "predict_out"):
                             res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                        elif(tag == "predict_out" and q_id >= first_q_out_of_domain):
-                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                            valids+=1
                         else:
-                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                            if(tag == "predict_in" and q_id < first_q_out_of_domain):
+                                res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                                valids+=1
+                            elif(tag == "predict_out" and q_id >= first_q_out_of_domain):
+                                res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                                valids+=1
 
                 y_pred = np.squeeze(y_pred)
                 for lc_idx in range(len(list_counts)-1):
@@ -344,8 +349,8 @@ def predict(config):
                         if p[0] not in res_scores:
                             res_scores[p[0]] = {}
                         res_scores[p[0]][p[1]] = (y, t)
-
-                num_valid += len(list_counts) - 1
+                num_valid+=valids
+                # num_valid += len(list_counts) - 1
             else:
                 for k, eval_func in eval_metrics.items():
                     res[k] += eval_func(y_true = y_true, y_pred = y_pred)
@@ -369,7 +374,7 @@ def predict(config):
                         dinfo = sorted(dinfo.items(), key=lambda d:d[1][0], reverse=True)
                         for inum,(did, (score, gt)) in enumerate(dinfo):
                             print >> f, '%s %s %s %s'%(gt, qid, did, score)
-
+        print("valids:", num_valid)
         print '[Predict] results: ', '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()])
         sys.stdout.flush()
 
