@@ -602,7 +602,7 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
 
         path = config['domain_splits_folder']
         with open(path+'domain_splits_train') as f:
-            size = int(f.read())
+            size = int(f.read().split("Q")[1])
             self.train_domain_division = size
 
         self.balanced_domain_batches = config['balanced_domain_batches']
@@ -733,7 +733,7 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
 
         path = config['domain_splits_folder']
         with open(path+'domain_splits_train') as f:
-            size = int(f.read())
+            size = int(f.read().split("Q")[1])
             self.train_domain_division = size
 
         self.balanced_domain_batches = config['balanced_domain_batches']

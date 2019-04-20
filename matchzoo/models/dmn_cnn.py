@@ -13,7 +13,7 @@ import keras
 import keras.backend as K
 from keras.models import Sequential, Model
 from keras.layers import *
-from keras.layers import Reshape, Embedding,Merge, Dot
+from keras.layers import Reshape, Embedding,Merge, Dot, Concatenate, concatenate
 from keras.optimizers import Adam
 from model import BasicModel
 from flipGradientTF import GradientReversal
@@ -124,10 +124,23 @@ class DMN_CNN(BasicModel):
             flip_grad = False
 
         Flip = GradientReversal(self.l, really_flip=flip_grad)
-        in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
+        # in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
+        # in_domain_clf = Flip(q_rep)
+        # in_domain_clf = Flip(q_embed)
+
+        # d1_flatten = Flatten()(d_embed)
+        # d2_flatten = Flatten()(d_rep)
+        # doc_flatten = concatenate([d1_flatten, d2_flatten])
+        # in_domain_clf = Flip(doc_flatten)
+
+        in_domain_clf = Flip(d_embed)
+        show_layer_info('in_domain_clf', in_domain_clf)
+
         out_domain = Dense(2, activation='softmax')(in_domain_clf)
+        show_layer_info('out_domain', out_domain)
 
         model_clf = Model(inputs=[query, doc], outputs=out_domain)
+        print(model_clf.summary())
 
         # MLP
         if self.config['target_mode'] == 'classification':
@@ -137,4 +150,5 @@ class DMN_CNN(BasicModel):
         show_layer_info('Dense', out_)
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         model = Model(inputs=[query, doc], outputs=out_)
+        print(model.summary())
         return model, model_clf

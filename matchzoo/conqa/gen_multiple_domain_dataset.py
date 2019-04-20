@@ -48,7 +48,7 @@ if __name__ == '__main__':
     
     basedir = '../../data/' + output_data_name + '/ModelInput/'
     cur_data_dir = basedir + 'dmn_model_input/'
-
+    sizes = []
     for data_part in list(['train', 'valid', 'test']):
         new_file = []
         size = 0
@@ -59,9 +59,8 @@ if __name__ == '__main__':
         with open(basedir_2+data_part+'.txt') as f:
             for line in f:
                 new_file.append(line)
+        sizes.append(size)
 
-        with open('../../data/'+output_data_name+'/ModelInput/domain_splits_'+data_part, 'w') as f:
-            f.write(str(size))
         with open('../../data/'+output_data_name+'/ModelInput/'+data_part+'.txt', 'w') as f:
             for line in new_file:
                 f.write(line)
@@ -74,6 +73,14 @@ if __name__ == '__main__':
     corpus, rels_train, rels_valid, rels_test = prepare.run_with_train_valid_test_corpus_dmn(
         basedir + train_file, basedir + valid_file,
         basedir + test_file)
+
+    with open('../../data/'+output_data_name+'/ModelInput/domain_splits_train', 'w') as f:
+            f.write(rels_train[sizes[0]][1])
+    with open('../../data/'+output_data_name+'/ModelInput/domain_splits_valid', 'w') as f:
+            f.write(rels_valid[sizes[1]][1])
+    with open('../../data/'+output_data_name+'/ModelInput/domain_splits_test', 'w') as f:
+            f.write(rels_test[sizes[2]][1])
+
     for data_part in list(['train', 'valid', 'test']):
         if data_part == 'train':
             rels = rels_train

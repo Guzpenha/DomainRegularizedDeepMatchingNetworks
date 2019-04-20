@@ -98,14 +98,14 @@ def train(config):
             datapath = input_conf[tag]['qa_comat_file']
             if datapath not in dataset:
                 dataset[datapath] = read_qa_comat(datapath)
-        if 'text1_corpus_ood' in input_conf[tag]:
-            datapath = input_conf[tag]['text1_corpus_ood']
-            if datapath not in dataset:
-                dataset[datapath] = read_data_2d(datapath)
-        if 'text2_corpus_ood' in input_conf[tag]:
-            datapath = input_conf[tag]['text2_corpus_ood']
-            if datapath not in dataset:
-                dataset[datapath] = read_data_2d(datapath)  
+        # if 'text1_corpus_ood' in input_conf[tag]:
+        #     datapath = input_conf[tag]['text1_corpus_ood']
+        #     if datapath not in dataset:
+        #         dataset[datapath] = read_data_2d(datapath)
+        # if 'text2_corpus_ood' in input_conf[tag]:
+        #     datapath = input_conf[tag]['text2_corpus_ood']
+        #     if datapath not in dataset:
+        #         dataset[datapath] = read_data_2d(datapath)  
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
@@ -125,8 +125,8 @@ def train(config):
         print conf
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
-        conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
-        conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
+        # conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
+        # conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
         if 'qa_comat_file' in share_input_conf:
             conf['qa_comat'] = dataset[conf['qa_comat_file']]
         generator = inputs.get(conf['input_type'])
@@ -157,9 +157,6 @@ def train(config):
     print '[Model] Model Compile Done.'
     model_clf.compile(optimizer=optimizer,loss='categorical_crossentropy')
     print '[Model] Domain classifier model Compile Done.'
-
-    if share_input_conf['predict_ood'] == 'False':
-        del eval_gen['ood']
 
     if(share_input_conf['predict'] == 'False'):
         del eval_gen['test']
@@ -264,14 +261,14 @@ def predict(config):
                 datapath = input_conf[tag]['qa_comat_file']
                 if datapath not in dataset:
                     dataset[datapath] = read_qa_comat(datapath)
-            if 'text1_corpus_ood' in input_conf[tag]:
-                datapath = input_conf[tag]['text1_corpus_ood']
-                if datapath not in dataset:
-                    dataset[datapath] = read_data_2d(datapath)
-            if 'text2_corpus_ood' in input_conf[tag]:
-                datapath = input_conf[tag]['text2_corpus_ood']
-                if datapath not in dataset:
-                    dataset[datapath] = read_data_2d(datapath)            
+            # if 'text1_corpus_ood' in input_conf[tag]:
+            #     datapath = input_conf[tag]['text1_corpus_ood']
+            #     if datapath not in dataset:
+            #         dataset[datapath] = read_data_2d(datapath)
+            # if 'text2_corpus_ood' in input_conf[tag]:
+            #     datapath = input_conf[tag]['text2_corpus_ood']
+            #     if datapath not in dataset:
+            #         dataset[datapath] = read_data_2d(datapath)            
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
@@ -281,8 +278,8 @@ def predict(config):
         print conf
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
-        conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
-        conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
+        # conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
+        # conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
         if 'qa_comat_file' in share_input_conf:
             conf['qa_comat'] = dataset[conf['qa_comat_file']]
         generator = inputs.get(conf['input_type'])
@@ -311,13 +308,11 @@ def predict(config):
         else:
             eval_metrics[mobj] = metrics.get(mobj)
 
-    if share_input_conf['predict'] == 'False':
-        del predict_gen['predict']
-
-    if share_input_conf['predict_ood'] == 'False':
-        del predict_gen['predict_ood']
-
     print(predict_gen)
+    if("predict_in" or "predict_out" in [i[0] for i in predict_gen.items()]):
+        path = config["model"]["setting"]["domain_splits_folder"]
+        with open(path+'domain_splits_test') as f:
+            first_q_out_of_domain = int(f.read().split("Q")[1])
     for tag, generator in predict_gen.items():
         res = dict([[k,0.] for k in eval_metrics.keys()])
         genfun = generator.get_batch_generator()
@@ -333,7 +328,13 @@ def predict(config):
                     for lc_idx in range(len(list_counts)-1):
                         pre = list_counts[lc_idx]
                         suf = list_counts[lc_idx+1]
-                        res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                        q_id = int(input_data['ID'][lc_idx][0].split("Q")[1])
+                        if(tag == "predict_in" and q_id < first_q_out_of_domain):
+                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                        elif(tag == "predict_out" and q_id >= first_q_out_of_domain):
+                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                        else:
+                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
 
                 y_pred = np.squeeze(y_pred)
                 for lc_idx in range(len(list_counts)-1):
