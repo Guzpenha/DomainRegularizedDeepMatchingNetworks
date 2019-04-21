@@ -649,7 +649,7 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
                 d1, d2p, d2n = self.d2_pair_list[rand_idx]
 
             #10 because we have 9 candidates for each true response
-            domain = int(int(d1.split("Q")[1])<=self.train_domain_division/10)            
+            domain = int(int(d1.split("Q")[1])<=self.train_domain_division)            
 
             Y_domain.append(domain)
             # print 'd1, d2p, d2n  = ', d1, d2p, d2n
