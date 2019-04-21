@@ -610,12 +610,13 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
             self.d1_pair_list = []
             self.d2_pair_list = []
             for triplet in self.pair_list:
-                domain = (int(triplet[0].split("Q")[1])<=self.train_domain_division/10)
+                domain = (int(triplet[0].split("Q")[1])<=self.train_domain_division)
                 if(domain):
                     self.d1_pair_list.append(triplet)
                 else:
                     self.d2_pair_list.append(triplet)
-
+            print('d1 pair_list size', str(len(self.d1_pair_list)))
+            print('d2 pair_list size', str(len(self.d2_pair_list)))
         print '[DMN_PairGeneratorMultipleDomains] init done'
 
     def get_batch_static(self):
@@ -741,7 +742,7 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
             self.d1_pair_list = []
             self.d2_pair_list = []
             for triplet in self.pair_list:
-                domain = (int(triplet[0].split("Q")[1])<=self.train_domain_division/10)
+                domain = (int(triplet[0].split("Q")[1])<=self.train_domain_division)
                 if(domain):
                     self.d1_pair_list.append(triplet)
                 else:
@@ -772,7 +773,7 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
                 d1, d2p, d2n = self.d2_pair_list[rand_idx]
 
             #10 because we have 9 candidates for each true response
-            domain = int(int(d1.split("Q")[1])<=self.train_domain_division/10)            
+            domain = int(int(d1.split("Q")[1])<=self.train_domain_division)            
 
             # print 'd1, d2p, d2n  = ', d1, d2p, d2n
             # print 'self.data2[d2p] = ', self.data2[d2p]

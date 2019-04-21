@@ -128,12 +128,12 @@ class DMN_CNN(BasicModel):
         # in_domain_clf = Flip(q_rep)
         # in_domain_clf = Flip(q_embed)
 
-        # d1_flatten = Flatten()(d_embed)
+        d1_flatten = Flatten()(d_embed)
         # d2_flatten = Flatten()(d_rep)
         # doc_flatten = concatenate([d1_flatten, d2_flatten])
         # in_domain_clf = Flip(doc_flatten)
 
-        in_domain_clf = Flip(d_embed)
+        in_domain_clf = Flip(d1_flatten)
         show_layer_info('in_domain_clf', in_domain_clf)
 
         out_domain = Dense(2, activation='softmax')(in_domain_clf)
@@ -150,5 +150,5 @@ class DMN_CNN(BasicModel):
         show_layer_info('Dense', out_)
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         model = Model(inputs=[query, doc], outputs=out_)
-        print(model.summary())
+        # print(model.summary())
         return model, model_clf
