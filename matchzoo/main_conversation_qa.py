@@ -114,7 +114,7 @@ def train(config):
     eval_gen = OrderedDict()
 
     for tag, conf in input_train_conf.items():
-        print conf
+        # print conf
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
         if 'qa_comat_file' in share_input_conf:
@@ -123,7 +123,7 @@ def train(config):
         train_gen[tag] = generator( config = conf )
 
     for tag, conf in input_eval_conf.items():
-        print conf
+        # print conf
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
         # conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
