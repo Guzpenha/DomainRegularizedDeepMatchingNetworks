@@ -22,6 +22,7 @@ import inputs
 import metrics
 from losses import *
 import os.path
+from tqdm import tqdm
 
 def load_model(config):
     global_conf = config["global"]
@@ -319,6 +320,9 @@ def predict(config):
         print '[%s]\t[Predict] @ %s ' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
         num_valid = 0
         res_scores = {}
+        # from IPython import embed
+        # embed()
+        pbar = tqdm(total=generator.num_list)
         for input_data, y_true in genfun:
             y_pred = model.predict(input_data, batch_size=len(y_true))
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
@@ -329,8 +333,6 @@ def predict(config):
                     for lc_idx in range(len(list_counts)-1):
                         pre = list_counts[lc_idx]
                         suf = list_counts[lc_idx+1]
-                        # from IPython import embed
-                        # embed()
                         q_id = int(input_data['ID'][lc_idx][0].split("Q")[1])
                         if(tag != "predict_in" and tag != "predict_out"):
                             res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
@@ -361,6 +363,7 @@ def predict(config):
                         res_scores[p[0]] = {}
                     res_scores[p[0]][p[1]] = (y[1], t[1])
                 num_valid += 1
+            pbar.update(config['inputs']['predict']['batch_list'])
         generator.reset()
 
         if tag in output_conf:
