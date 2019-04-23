@@ -164,7 +164,7 @@ def train(config):
         del eval_gen['valid']
 
     if(share_input_conf["domain_training_type"] != "DMN-ADL" and \
-        share_input_conf["domain_training_type"] != "DMN-MTL"):
+        share_input_conf["domain_training_type"] != "DMN-MTL" and 'train_clf' in train_gen):
         del train_gen['train_clf']
     print(eval_gen)
     print(train_gen)
