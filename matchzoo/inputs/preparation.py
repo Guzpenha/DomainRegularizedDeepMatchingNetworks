@@ -220,12 +220,15 @@ class Preparation(object):
                            The format is "label qid did"
         :return:
         '''
+        in_count = 0
+        out_count = 0
         with open(input_file) as f_in, open(input_file + '.fd', 'w') as f_out:
             cur_qid = 'init'
             cache_did_set = set()
             cache_q_lines = []
             found_dup_doc = False
             for l in f_in:
+                in_count+=1
                 tokens = l.split()
                 if tokens[1] == cur_qid:
                     # same qid
@@ -237,6 +240,7 @@ class Preparation(object):
                 else:
                     # new qid
                     if not found_dup_doc:
+                        out_count+=len(cache_q_lines)
                         f_out.write(''.join(cache_q_lines))
                     else:
                         print
@@ -253,8 +257,11 @@ class Preparation(object):
             # print len(cache_q_lines), len(cache_did_set)
             if (len(cache_q_lines) != 0 and len(cache_q_lines) == len(cache_did_set)):
                 f_out.write(''.join(cache_q_lines))
+                out_count+=len(cache_q_lines)
                 print
                 'write the last query... done: ', ''.join(cache_q_lines)
+        print("in_count", in_count)
+        print("out_count", out_count)
 
     @staticmethod
     def split_train_valid_test(relations, ratio=[0.8, 0.1, 0.1]):
