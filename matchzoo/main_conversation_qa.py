@@ -188,6 +188,8 @@ def train(config):
             history = correct_model.fit_generator(
                     genfun,
                     steps_per_epoch = display_interval, # if display_interval = 10, then there are 10 batches in 1 epoch                                    
+                    #REMOVE THIS \/
+                    # steps_per_epoch = 1, # if display_interval = 10, then there are 10 batches in 1 epoch                                    
                     epochs = 1,
                     shuffle=False,
                     verbose = 0
@@ -205,30 +207,16 @@ def train(config):
                     issubclass(type(generator), inputs.list_generator.ListOODGenerator) :
                     list_counts = input_data['list_counts']
                     for k, eval_func in eval_metrics.items():
-                        valids = 0
                         for lc_idx in range(len(list_counts)-1):
                             pre = list_counts[lc_idx]
                             suf = list_counts[lc_idx+1]
-                            q_id = int(input_data['ID'][lc_idx][0].split("Q")[1])
-                            if(tag != "eval_predict_in" and tag != "eval_predict_out"):
-                                res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])                                
-                            else:
-                                if(tag == "eval_predict_in" and q_id < first_q_out_of_domain):
-                                    res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                                    valids+=1
-                                elif(tag == "eval_predict_out" and q_id >= first_q_out_of_domain):
-                                    res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                                    valids+=1     
-                    if(tag != "eval_predict_in" and tag != "eval_predict_out"):                       
-                        num_valid += len(list_counts) - 1
-                    else:
-                        num_valid+=valids
+                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
+                    num_valid += len(list_counts) - 1
                 else:
                     for k, eval_func in eval_metrics.items():
                         res[k] += eval_func(y_true = y_true, y_pred = y_pred)
                     num_valid += 1
             generator.reset()
-            print('num_valid', num_valid)
             print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
             sys.stdout.flush()
         if (i_e+1) % save_weights_iters == 0:

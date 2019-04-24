@@ -23,6 +23,7 @@ class PairBasicGenerator(object):
         else:
             self.pair_list = self.make_pair_static(self.rel)
             self.pair_list_iter = None
+        print('len pair_list', len(self.pair_list))
 
     def check(self):
         for e in self.check_list:
