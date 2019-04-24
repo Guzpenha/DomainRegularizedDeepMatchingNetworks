@@ -220,8 +220,15 @@ def train(config):
             print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
             sys.stdout.flush()
         if (i_e+1) % save_weights_iters == 0:
-            model.save_weights(weights_file % (i_e+1))
-
+            if(share_input_conf["domain_training_type"] == "DMN-ADL"):
+                weights_file= weights_file+"_ADL"
+                model.save_weights(weights_file % (i_e+1))
+            elif(share_input_conf["domain_training_type"] == "DMN-MTL"):
+                weights_file= weights_file+"_MTL"
+                model.save_weights(weights_file % (i_e+1))
+            else:
+                model.save_weights(weights_file % (i_e+1))
+                
 def predict(config):
     ######## Read input config ########
 
