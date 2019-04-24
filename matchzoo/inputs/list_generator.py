@@ -656,8 +656,10 @@ class DMN_ListGeneratorByDomain(ListBasicGenerator):
         print('d2 list_list size', str(len(self.d2_list_list)))
         if(config['domain'] == 0):
             self.list_list = self.d1_list_list
+            self.num_list = len(self.list_list)
         else:
             self.list_list = self.d2_list_list
+            self.num_list = len(self.list_list)
 
     def get_batch(self):
         while self.point < self.num_list:
