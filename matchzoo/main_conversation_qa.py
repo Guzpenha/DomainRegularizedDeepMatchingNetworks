@@ -357,7 +357,8 @@ def predict(config):
                         res_scores[p[0]] = {}
                     res_scores[p[0]][p[1]] = (y[1], t[1])
                 num_valid += 1
-            pbar.update(config['inputs']['predict']['batch_list'])
+            if('predict' in config['inputs']):
+                pbar.update(config['inputs']['predict']['batch_list'])
         generator.reset()
 
         if tag in output_conf:
