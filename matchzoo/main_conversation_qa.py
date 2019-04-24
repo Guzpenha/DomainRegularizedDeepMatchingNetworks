@@ -160,8 +160,12 @@ def train(config):
     print '[Model] Domain classifier model Compile Done.'
 
     if(share_input_conf['predict'] == 'False'):
-        del eval_gen['test']
-        del eval_gen['valid']
+        if('test' in eval_gen):
+            del eval_gen['test']
+        if('valid' in eval_gen):
+            del eval_gen['valid']
+        if('eval_predict_in' in eval_gen):
+            del eval_gen['eval_predict_in']
 
     if(share_input_conf["domain_training_type"] != "DMN-ADL" and \
         share_input_conf["domain_training_type"] != "DMN-MTL" and 'train_clf' in train_gen):
@@ -169,10 +173,6 @@ def train(config):
     print(eval_gen)
     print(train_gen)
 
-    if("eval_predict_in" or "eval_predict_out" in [i[0] for i in predict_gen.items()]):
-        path = config["model"]["setting"]["domain_splits_folder"]
-        with open(path+'domain_splits_test') as f:
-            first_q_out_of_domain = int(f.read().split("Q")[1])
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
@@ -316,18 +316,12 @@ def predict(config):
             eval_metrics[mobj] = metrics.get(mobj)
 
     print(predict_gen)
-    if("predict_in" or "predict_out" in [i[0] for i in predict_gen.items()]):
-        path = config["model"]["setting"]["domain_splits_folder"]
-        with open(path+'domain_splits_test') as f:
-            first_q_out_of_domain = int(f.read().split("Q")[1])
     for tag, generator in predict_gen.items():
         res = dict([[k,0.] for k in eval_metrics.keys()])
         genfun = generator.get_batch_generator()
         print '[%s]\t[Predict] @ %s ' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
         num_valid = 0
         res_scores = {}
-        # from IPython import embed
-        # embed()
         pbar = tqdm(total=generator.num_list)
         for input_data, y_true in genfun:
             y_pred = model.predict(input_data, batch_size=len(y_true))
@@ -335,21 +329,10 @@ def predict(config):
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator):
                 list_counts = input_data['list_counts']
                 for k, eval_func in eval_metrics.items():
-                    valids = 0
                     for lc_idx in range(len(list_counts)-1):
                         pre = list_counts[lc_idx]
                         suf = list_counts[lc_idx+1]
-                        q_id = int(input_data['ID'][lc_idx][0].split("Q")[1])
-                        if(tag != "predict_in" and tag != "predict_out"):
-                            res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                            valids+=1
-                        else:
-                            if(tag == "predict_in" and q_id < first_q_out_of_domain):
-                                res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                                valids+=1
-                            elif(tag == "predict_out" and q_id >= first_q_out_of_domain):
-                                res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
-                                valids+=1
+                        res[k] += eval_func(y_true = y_true[pre:suf], y_pred = y_pred[pre:suf])
 
                 y_pred = np.squeeze(y_pred)
                 for lc_idx in range(len(list_counts)-1):
@@ -359,8 +342,8 @@ def predict(config):
                         if p[0] not in res_scores:
                             res_scores[p[0]] = {}
                         res_scores[p[0]][p[1]] = (y, t)
-                num_valid+=valids
-                # num_valid += len(list_counts) - 1
+
+                num_valid += len(list_counts) - 1
             else:
                 for k, eval_func in eval_metrics.items():
                     res[k] += eval_func(y_true = y_true, y_pred = y_pred)
