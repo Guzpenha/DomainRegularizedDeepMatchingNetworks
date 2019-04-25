@@ -359,6 +359,10 @@ def predict(config):
                 num_valid += 1
             if('predict' in config['inputs']):
                 pbar.update(config['inputs']['predict']['batch_list'])
+            elif('predict_in'in config['inputs']):
+                pbar.update(config['inputs']['predict_in']['batch_list'])
+            elif('predict_out'in config['inputs']):
+                pbar.update(config['inputs']['predict_out']['batch_list'])
         generator.reset()
 
         if tag in output_conf:
