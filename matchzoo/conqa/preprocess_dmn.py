@@ -41,6 +41,10 @@ if __name__ == '__main__':
         train_file = 'train.txt'
         valid_file = 'valid.txt'
         test_file = 'test.txt'
+    elif data_name == 'apple':
+        train_file = 'data_train.tsv'
+        valid_file = 'data_dev.tsv'
+        test_file = 'data_test.tsv'        
     else:
         raise ValueError('invalid data name!')
 

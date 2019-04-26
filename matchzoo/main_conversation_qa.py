@@ -367,7 +367,7 @@ def predict(config):
 
         if tag in output_conf:
             if output_conf[tag]['save_format'] == 'TREC':
-                with open(output_conf[tag]['save_path']+tag, 'w') as f:
+                with open(output_conf[tag]['save_path'], 'w') as f:
                     for qid, dinfo in res_scores.items():
                         dinfo = sorted(dinfo.items(), key=lambda d:d[1][0], reverse=True)
                         for inum,(did, (score, gt)) in enumerate(dinfo):
