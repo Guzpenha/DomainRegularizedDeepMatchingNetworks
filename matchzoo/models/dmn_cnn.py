@@ -71,11 +71,14 @@ class DMN_CNN(BasicModel):
         # show_layer_info('Doc Embedding', d_embed)
         accum_stack = []
 
+        input_to_doman_clf = None
         for i in range(self.config['text1_max_utt_num']):
             self.i = i
             query_cur_utt = Lambda(slice_reshape)(query)
             # show_layer_info('query_cur_utt', query_cur_utt)
             q_embed = embedding(query_cur_utt)
+            if(i==0):
+                input_to_doman_clf = q_embed
             # show_layer_info('Query Embedding', q_embed)
             q_rep = Bidirectional(
                 GRU(self.config['hidden_size'], return_sequences=True, dropout=self.config['dropout_rate']))(q_embed)
@@ -118,7 +121,7 @@ class DMN_CNN(BasicModel):
         # show_layer_info('Dropout', accum_stack_gru_hidden_flat_drop)
 
         #DMN-DAL or DMN-MTL
-        if(self.config["domain_training_type"] == "DMN-DAL"):
+        if(self.config["domain_training_type"] == "DMN-ADL"):
             flip_grad = True
         else: 
             flip_grad = False
@@ -127,13 +130,13 @@ class DMN_CNN(BasicModel):
         # in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
         # in_domain_clf = Flip(q_rep)
         # in_domain_clf = Flip(q_embed)
-
-        d1_flatten = Flatten()(d_embed)
+        # d1_flatten = Flatten()(d_embed)
         # d2_flatten = Flatten()(d_rep)
         # doc_flatten = concatenate([d1_flatten, d2_flatten])
         # in_domain_clf = Flip(doc_flatten)
 
-        in_domain_clf = Flip(d1_flatten)
+        # in_domain_clf = Flip(Flatten()(input_to_doman_clf))
+        in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
         # show_layer_info('in_domain_clf', in_domain_clf)
 
         out_domain = Dense(2, activation='softmax')(in_domain_clf)

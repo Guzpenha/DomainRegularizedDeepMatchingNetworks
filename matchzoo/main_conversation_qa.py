@@ -23,6 +23,7 @@ import metrics
 from losses import *
 import os.path
 from tqdm import tqdm
+import pickle
 
 def load_model(config):
     global_conf = config["global"]
@@ -99,14 +100,15 @@ def train(config):
             datapath = input_conf[tag]['qa_comat_file']
             if datapath not in dataset:
                 dataset[datapath] = read_qa_comat(datapath)
-        # if 'text1_corpus_ood' in input_conf[tag]:
-        #     datapath = input_conf[tag]['text1_corpus_ood']
-        #     if datapath not in dataset:
-        #         dataset[datapath] = read_data_2d(datapath)
-        # if 'text2_corpus_ood' in input_conf[tag]:
-        #     datapath = input_conf[tag]['text2_corpus_ood']
-        #     if datapath not in dataset:
-        #         dataset[datapath] = read_data_2d(datapath)  
+        if (share_input_conf["predict_ood"]):
+            if 'text1_corpus_ood' in input_conf[tag]:
+                datapath = input_conf[tag]['text1_corpus_ood']
+                if datapath not in dataset:
+                    dataset[datapath] = read_data_2d(datapath)
+            if 'text2_corpus_ood' in input_conf[tag]:
+                datapath = input_conf[tag]['text2_corpus_ood']
+                if datapath not in dataset:
+                    dataset[datapath] = read_data_2d(datapath)  
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
@@ -126,8 +128,9 @@ def train(config):
         # print conf
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
-        # conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
-        # conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
+        if (share_input_conf["predict_ood"]):
+            conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
+            conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
         if 'qa_comat_file' in share_input_conf:
             conf['qa_comat'] = dataset[conf['qa_comat_file']]
         generator = inputs.get(conf['input_type'])
@@ -156,7 +159,13 @@ def train(config):
             eval_metrics[mobj] = metrics.get(mobj)
     model.compile(optimizer=optimizer, loss=loss)
     print '[Model] Model Compile Done.'
-    model_clf.compile(optimizer=optimizer,loss='categorical_crossentropy')
+
+    def custom_loss(y_true, y_pred):
+        cce = categorical_crossentropy(y_true, y_pred)
+        lambda_domain_loss = 1.0
+        return cce * lambda_domain_loss
+
+    model_clf.compile(optimizer=optimizer, loss=custom_loss)
     print '[Model] Domain classifier model Compile Done.'
 
     if(share_input_conf['predict'] == 'False'):
@@ -172,7 +181,7 @@ def train(config):
         del train_gen['train_clf']
     print(eval_gen)
     print(train_gen)
-
+    del train_gen['train']
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
@@ -273,25 +282,28 @@ def predict(config):
                 datapath = input_conf[tag]['qa_comat_file']
                 if datapath not in dataset:
                     dataset[datapath] = read_qa_comat(datapath)
-            # if 'text1_corpus_ood' in input_conf[tag]:
-            #     datapath = input_conf[tag]['text1_corpus_ood']
-            #     if datapath not in dataset:
-            #         dataset[datapath] = read_data_2d(datapath)
-            # if 'text2_corpus_ood' in input_conf[tag]:
-            #     datapath = input_conf[tag]['text2_corpus_ood']
-            #     if datapath not in dataset:
-            #         dataset[datapath] = read_data_2d(datapath)            
+            if (share_input_conf["predict_ood"]):
+                if 'text1_corpus_ood' in input_conf[tag]:
+                    datapath = input_conf[tag]['text1_corpus_ood']
+                    if datapath not in dataset:
+                        dataset[datapath] = read_data_2d(datapath)
+                if 'text2_corpus_ood' in input_conf[tag]:
+                    datapath = input_conf[tag]['text2_corpus_ood']
+                    if datapath not in dataset:
+                        dataset[datapath] = read_data_2d(datapath)            
     print '[Dataset] %s Dataset Load Done.' % len(dataset)
 
     # initial data generator
     predict_gen = OrderedDict()
 
     for tag, conf in input_predict_conf.items():
-        print conf
+        if(tag == "predict_ood" and not share_input_conf["predict_ood"]):
+            continue
         conf['data1'] = dataset[conf['text1_corpus']]
         conf['data2'] = dataset[conf['text2_corpus']]
-        # conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
-        # conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
+        if (share_input_conf["predict_ood"]):
+            conf['data1_ood'] = dataset[conf['text1_corpus_ood']]
+            conf['data2_ood'] = dataset[conf['text2_corpus_ood']]
         if 'qa_comat_file' in share_input_conf:
             conf['qa_comat'] = dataset[conf['qa_comat_file']]
         generator = inputs.get(conf['input_type'])
@@ -310,7 +322,7 @@ def predict(config):
     model, model_clf = load_model(config)
     model.load_weights(weights_file)
     print ('Model loaded')
-
+    print(model.summary())
     eval_metrics = OrderedDict()
     for mobj in config['metrics']:
         mobj = mobj.lower()
@@ -320,7 +332,11 @@ def predict(config):
         else:
             eval_metrics[mobj] = metrics.get(mobj)
 
+    save_query_representation=False
+    if(save_query_representation):
+        utterances_w_emb = {}
     print(predict_gen)
+
     for tag, generator in predict_gen.items():
         res = dict([[k,0.] for k in eval_metrics.keys()])
         genfun = generator.get_batch_generator()
@@ -330,6 +346,30 @@ def predict(config):
         pbar = tqdm(total=generator.num_list)
         for input_data, y_true in genfun:
             y_pred = model.predict(input_data, batch_size=len(y_true))
+
+            if(save_query_representation):
+                # utterances_bigru = []
+                # for i in range(config['inputs']['share']['text1_max_utt_num'] * 2):
+                #     if((i+1)%2!=0):
+                #         print(i+1)
+                #         intermediate_layer_model = Model(inputs=model.input,
+                #                                          outputs=model.get_layer('bidirectional_'+str(i+1)).output)
+                #         utterances_bigru.append(intermediate_layer_model.predict(input_data, batch_size=len(y_true)))
+                for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
+                    intermediate_layer_model = Model(inputs=model.input,
+                                                     outputs=model.get_layer('embedding_1').get_output_at(i+1))
+                    batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
+                    list_counts = input_data['list_counts']
+                    for lc_idx in range(len(list_counts)-1):
+                        pre = list_counts[lc_idx]
+                        suf = list_counts[lc_idx+1]
+                        q = input_data['ID'][pre:pre+1][0][0]
+                        if(tag == 'predict_ood'):
+                            q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                        if(q not in utterances_w_emb):
+                            utterances_w_emb[q] = {}
+                        utterances_w_emb[q]['turn_'+str(i+1)] = batch_embeddings[pre:suf]
+
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator):
                 list_counts = input_data['list_counts']
@@ -344,11 +384,16 @@ def predict(config):
                     pre = list_counts[lc_idx]
                     suf = list_counts[lc_idx+1]
                     for p, y, t in zip(input_data['ID'][pre:suf], y_pred[pre:suf], y_true[pre:suf]):
-                        if p[0] not in res_scores:
-                            res_scores[p[0]] = {}
-                        res_scores[p[0]][p[1]] = (y, t)
+                        q = p[0]
+                        if(tag == 'predict_ood'):
+                            q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                        if q not in res_scores:
+                            res_scores[q] = {}
+                        res_scores[q][p[1]] = (y, t)
 
                 num_valid += len(list_counts) - 1
+                # if(num_valid > 3479):
+                #     break
             else:
                 for k, eval_func in eval_metrics.items():
                     res[k] += eval_func(y_true = y_true, y_pred = y_pred)
@@ -363,8 +408,15 @@ def predict(config):
                 pbar.update(config['inputs']['predict_in']['batch_list'])
             elif('predict_out'in config['inputs']):
                 pbar.update(config['inputs']['predict_out']['batch_list'])
+            elif('predict_ood'in config['inputs']):
+                pbar.update(config['inputs']['predict_ood']['batch_list'])
+
         generator.reset()
 
+
+        if(save_query_representation):
+            with open(config['global']['representations_save_path']+'q_rep.pickle', 'wb') as handle:
+                pickle.dump(utterances_w_emb, handle, protocol=pickle.HIGHEST_PROTOCOL)
         if tag in output_conf:
             if output_conf[tag]['save_format'] == 'TREC':
                 with open(output_conf[tag]['save_path'], 'w') as f:
@@ -464,7 +516,7 @@ def main(argv):
         if predict_eval != None:
             config['inputs']['share']['predict'] = predict_eval
         if predict_ood != None:
-            config['inputs']['share']['predict_ood'] = predict_ood
+            config['inputs']['share']['predict_ood'] = predict_ood == 'True'
         if embed_size != None:
             config['inputs']['share']['embed_size'] = int(embed_size)
         if embed_path != None:

@@ -37,6 +37,6 @@ if __name__ == '__main__':
 				new_line=splited[0] + "\t" + splited[1]+ "\t" + ' '.join(indexes_in_src) + "\t\n"
 			new_file.append(new_line)
 
-	with open(cur_data_dir_1+'corpus_preprocessed_ood_udc.txt','w') as f:
+	with open(cur_data_dir_1+'corpus_preprocessed_ood.txt','w') as f:
 		for line in new_file:
 			f.write(line)
