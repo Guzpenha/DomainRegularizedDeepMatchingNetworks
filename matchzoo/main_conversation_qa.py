@@ -181,7 +181,7 @@ def train(config):
         del train_gen['train_clf']
     print(eval_gen)
     print(train_gen)
-    del train_gen['train']
+
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
             genfun = generator.get_batch_generator()
