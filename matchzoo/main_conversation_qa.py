@@ -179,8 +179,6 @@ def train(config):
     if(share_input_conf["domain_training_type"] != "DMN-ADL" and \
         share_input_conf["domain_training_type"] != "DMN-MTL" and 'train_clf' in train_gen):
         del train_gen['train_clf']
-    print(eval_gen)
-    print(train_gen)
 
     for i_e in range(num_iters):
         for tag, generator in train_gen.items():
@@ -229,6 +227,16 @@ def train(config):
             print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
             sys.stdout.flush()
         if (i_e+1) % save_weights_iters == 0:
+            path_to_save = weights_file
+            if('domain_to_train' in input_conf['train'] and input_conf['train']['domain_to_train'] != -1):
+                path_to_save = weights_file+str(input_conf['train']['domain_to_train']+1)*5
+                if(share_input_conf["domain_training_type"] == "DMN-ADL"):                
+                    model.save_weights(path_to_save % (i_e+1+1000))
+                elif(share_input_conf["domain_training_type"] == "DMN-MTL"):                
+                    model.save_weights(path_to_save % (i_e+1+2000))
+                else:
+                    model.save_weights(path_to_save % (i_e+1))
+
             if(share_input_conf["domain_training_type"] == "DMN-ADL"):                
                 model.save_weights(weights_file % (i_e+1+1000))
             elif(share_input_conf["domain_training_type"] == "DMN-MTL"):                
@@ -322,7 +330,7 @@ def predict(config):
     model, model_clf = load_model(config)
     model.load_weights(weights_file)
     print ('Model loaded')
-    print(model.summary())
+    # print(model.summary())
     eval_metrics = OrderedDict()
     for mobj in config['metrics']:
         mobj = mobj.lower()
@@ -343,11 +351,27 @@ def predict(config):
         print '[%s]\t[Predict] @ %s ' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
         num_valid = 0
         res_scores = {}
-        pbar = tqdm(total=generator.num_list)
+        # pbar = tqdm(total=generator.num_list)
         for input_data, y_true in genfun:
             y_pred = model.predict(input_data, batch_size=len(y_true))
 
             if(save_query_representation):
+                # match representations
+                match_representation_layer_model = Model(inputs=model.input,
+                                                         outputs=model.get_layer('reshape_11').output)
+                batch_match_embedding = match_representation_layer_model.predict(input_data, batch_size=len(y_true))
+                list_counts = input_data['list_counts']
+                for lc_idx in range(len(list_counts)-1):
+                    pre = list_counts[lc_idx]
+                    suf = list_counts[lc_idx+1]
+                    q = input_data['ID'][pre:pre+1][0][0]
+                    if(tag == 'predict_ood'):
+                        q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                    if(q not in utterances_w_emb):
+                        utterances_w_emb[q] = {}
+                    utterances_w_emb[q]['match_rep'] = batch_match_embedding[pre:suf].flatten()
+
+                # GRU sentence representations
                 # utterances_bigru = []
                 # for i in range(config['inputs']['share']['text1_max_utt_num'] * 2):
                 #     if((i+1)%2!=0):
@@ -355,20 +379,23 @@ def predict(config):
                 #         intermediate_layer_model = Model(inputs=model.input,
                 #                                          outputs=model.get_layer('bidirectional_'+str(i+1)).output)
                 #         utterances_bigru.append(intermediate_layer_model.predict(input_data, batch_size=len(y_true)))
-                for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
-                    intermediate_layer_model = Model(inputs=model.input,
-                                                     outputs=model.get_layer('embedding_1').get_output_at(i+1))
-                    batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
-                    list_counts = input_data['list_counts']
-                    for lc_idx in range(len(list_counts)-1):
-                        pre = list_counts[lc_idx]
-                        suf = list_counts[lc_idx+1]
-                        q = input_data['ID'][pre:pre+1][0][0]
-                        if(tag == 'predict_ood'):
-                            q = ('Q'+str(9900000+ int(q.split('Q')[1])))
-                        if(q not in utterances_w_emb):
-                            utterances_w_emb[q] = {}
-                        utterances_w_emb[q]['turn_'+str(i+1)] = batch_embeddings[pre:suf]
+
+
+                #Word embedding sentence representations                
+                # for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
+                #     intermediate_layer_model = Model(inputs=model.input,
+                #                                      outputs=model.get_layer('embedding_1').get_output_at(i+1))
+                #     batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
+                #     list_counts = input_data['list_counts']
+                #     for lc_idx in range(len(list_counts)-1):
+                #         pre = list_counts[lc_idx]
+                #         suf = list_counts[lc_idx+1]
+                #         q = input_data['ID'][pre:pre+1][0][0]
+                #         if(tag == 'predict_ood'):
+                #             q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                #         if(q not in utterances_w_emb):
+                #             utterances_w_emb[q] = {}
+                #         utterances_w_emb[q]['turn_'+str(i+1)] = batch_embeddings[pre:suf]
 
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator):
@@ -402,14 +429,14 @@ def predict(config):
                         res_scores[p[0]] = {}
                     res_scores[p[0]][p[1]] = (y[1], t[1])
                 num_valid += 1
-            if('predict' in config['inputs']):
-                pbar.update(config['inputs']['predict']['batch_list'])
-            elif('predict_in'in config['inputs']):
-                pbar.update(config['inputs']['predict_in']['batch_list'])
-            elif('predict_out'in config['inputs']):
-                pbar.update(config['inputs']['predict_out']['batch_list'])
-            elif('predict_ood'in config['inputs']):
-                pbar.update(config['inputs']['predict_ood']['batch_list'])
+            # if('predict' in config['inputs']):
+            #     pbar.update(config['inputs']['predict']['batch_list'])
+            # elif('predict_in'in config['inputs']):
+            #     pbar.update(config['inputs']['predict_in']['batch_list'])
+            # elif('predict_out'in config['inputs']):
+            #     pbar.update(config['inputs']['predict_out']['batch_list'])
+            # elif('predict_ood'in config['inputs']):
+            #     pbar.update(config['inputs']['predict_ood']['batch_list'])
 
         generator.reset()
 

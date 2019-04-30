@@ -143,7 +143,7 @@ class DMN_CNN(BasicModel):
         # show_layer_info('out_domain', out_domain)
 
         model_clf = Model(inputs=[query, doc], outputs=out_domain)
-        print(model_clf.summary())
+        # print(model_clf.summary())
 
         # MLP
         if self.config['target_mode'] == 'classification':
