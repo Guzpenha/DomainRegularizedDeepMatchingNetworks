@@ -12,7 +12,7 @@
 module use /opt/insy/modulefiles
 module load cuda/10.0 cudnn/10.0-7.4.2.24
 
-cd NeuralResponseRankingDAL/matchzoo
+cd matchzoo
 
 
 NUM_ITERS=100
