@@ -190,7 +190,8 @@ def train(config):
             elif(tag == "train"):
                 correct_model = model
             p = float(i_e) / num_iters
-            l = 2. / (1. + np.exp(-10. * p)) - 1
+            # l = 2. / (1. + np.exp(-10. * p)) - 1
+            l = 1
             correct_model.l = l
             history = correct_model.fit_generator(
                     genfun,
@@ -420,7 +421,7 @@ def predict(config):
 
                 num_valid += len(list_counts) - 1
                 # if(num_valid > 3479):
-                #     break
+                    # break
             else:
                 for k, eval_func in eval_metrics.items():
                     res[k] += eval_func(y_true = y_true, y_pred = y_pred)

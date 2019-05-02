@@ -40,6 +40,14 @@ srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn
 srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS --predict_ood False
 
 
+#--------------------------------#
+#       Train on Both            #
+#--------------------------------#
+
+srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS --predict_ood True
+
+
 #========================================#
 #               DMN-ADL                  #
 #========================================#
@@ -61,6 +69,12 @@ srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/d
 srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False
 srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood False
 
+#--------------------------------#
+#       Train on Both            #
+#--------------------------------#
+
+srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood True
 
 #========================================#
 #               DMN-MTL                  #
@@ -81,3 +95,11 @@ srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/d
 
 srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False
 srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood False
+
+#--------------------------------#
+#       Train on Both            #
+#--------------------------------#
+
+srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood True
+
