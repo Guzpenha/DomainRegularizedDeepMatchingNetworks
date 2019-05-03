@@ -139,9 +139,11 @@ def train(config):
     ######### Load Model #########
     model, model_clf = load_model(config)
     to_load_weights_file_ = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
+    offset = 0
     if(os.path.isfile(to_load_weights_file_)):
         print "loading weights from file "+to_load_weights_file_
         model.load_weights(to_load_weights_file_)
+        offset=global_conf['test_weights_iters']
 
     loss = []
     for lobj in config['losses']:
@@ -227,23 +229,24 @@ def train(config):
             generator.reset()
             print 'Iter:%d\t%s' % (i_e, '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]))
             sys.stdout.flush()
-        if (i_e+1) % save_weights_iters == 0:
+        if (i_e+1) % save_weights_iters == 0:            
             path_to_save = weights_file
-            if('domain_to_train' in input_conf['train'] and input_conf['train']['domain_to_train'] != -1):
+            # if('domain_to_train' in input_conf['train'] and input_conf['train']['domain_to_train'] != -1):
+            if('domain_to_train' in input_conf['train']):
                 path_to_save = weights_file+str(input_conf['train']['domain_to_train']+1)*5
-                if(share_input_conf["domain_training_type"] == "DMN-ADL"):                
-                    model.save_weights(path_to_save % (i_e+1+1000))
-                elif(share_input_conf["domain_training_type"] == "DMN-MTL"):                
-                    model.save_weights(path_to_save % (i_e+1+2000))
+                if(share_input_conf["domain_training_type"] == "DMN-ADL"):
+                    model.save_weights(path_to_save % (i_e+offset+1+1000))
+                elif(share_input_conf["domain_training_type"] == "DMN-MTL"):
+                    model.save_weights(path_to_save % (i_e+offset+1+2000))
                 else:
-                    model.save_weights(path_to_save % (i_e+1))
+                    model.save_weights(path_to_save % (i_e+offset+1))
 
             if(share_input_conf["domain_training_type"] == "DMN-ADL"):                
-                model.save_weights(weights_file % (i_e+1+1000))
+                model.save_weights(weights_file % (i_e+offset+1+1000))
             elif(share_input_conf["domain_training_type"] == "DMN-MTL"):                
-                model.save_weights(weights_file % (i_e+1+2000))
+                model.save_weights(weights_file % (i_e+offset+1+2000))
             else:
-                model.save_weights(weights_file % (i_e+1))
+                model.save_weights(weights_file % (i_e+offset+1))
 
 def predict(config):
     ######## Read input config ########
