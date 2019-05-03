@@ -232,7 +232,7 @@ def train(config):
         if (i_e+1) % save_weights_iters == 0:            
             path_to_save = weights_file
             # if('domain_to_train' in input_conf['train'] and input_conf['train']['domain_to_train'] != -1):
-            if('domain_to_train' in input_conf['train']):
+            if('train' in input_conf and 'domain_to_train' in input_conf['train']):
                 path_to_save = weights_file+str(input_conf['train']['domain_to_train']+1)*5
                 if(share_input_conf["domain_training_type"] == "DMN-ADL"):
                     model.save_weights(path_to_save % (i_e+offset+1+1000))
