@@ -189,9 +189,9 @@ def train(config):
         if(alternate_per_batch and (share_input_conf["domain_training_type"] == "DMN-ADL" \
             or share_input_conf["domain_training_type"] == "DMN-MTL")):
             for i in range(display_interval):
-                print '[%s]\t[Train:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
                 for tag, generator in train_gen.items():
                     genfun = generator.get_batch_generator()
+                    print '[%s]\t[Train:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
                     
                     if(tag == "train_clf"):
                         correct_model = model_clf 
