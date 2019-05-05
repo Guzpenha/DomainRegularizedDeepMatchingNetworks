@@ -182,7 +182,7 @@ def train(config):
         share_input_conf["domain_training_type"] != "DMN-MTL" and 'train_clf' in train_gen):
         del train_gen['train_clf']
 
-    alternate_per_batch = True
+    alternate_per_batch = False
     if(alternate_per_batch):
         print("training alternated batches.")
     for i_e in range(num_iters):
@@ -191,8 +191,8 @@ def train(config):
             for i in range(display_interval):
                 for tag, generator in train_gen.items():
                     genfun = generator.get_batch_generator()
-                    print '[%s]\t[Train:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
-                    
+                    # print '[%s]\t[Train:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
+                    print('Train '+tag)
                     if(tag == "train_clf"):
                         correct_model = model_clf 
                     elif(tag == "train"):
@@ -208,7 +208,8 @@ def train(config):
                             shuffle=False,
                             verbose = 0
                         ) #callbacks=[eval_map])
-                print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])                
+                    if(i==(display_interval-1)):
+                        print ("Iter : "+ str(i_e) + " loss="+str(history.history['loss'][0]))
         else:
             for tag, generator in train_gen.items():
                 genfun = generator.get_batch_generator()
@@ -388,7 +389,7 @@ def predict(config):
             if(save_query_representation):
                 # match representations
                 match_representation_layer_model = Model(inputs=model.input,
-                                                         outputs=model.get_layer('reshape_11').output)
+                                                         outputs=model.get_layer('reshape_'+str(config['inputs']['share']['text1_max_utt_num']+1)).output)
                 batch_match_embedding = match_representation_layer_model.predict(input_data, batch_size=len(y_true))
                 list_counts = input_data['list_counts']
                 for lc_idx in range(len(list_counts)-1):
@@ -526,6 +527,7 @@ def main(argv):
     parser.add_argument('--domain_training_type', help='wheter to use DMN-ADL, DMN-MTL or none')
     parser.add_argument('--domain_to_train', help='train in only one source domain or all (-1)')
     parser.add_argument('--num_iters', help='number of iters')
+    parser.add_argument('--test_category', help='used for setting the out of domain topic for MSDialog topic as domain experiments')
 
 
     args = parser.parse_args()
@@ -563,7 +565,10 @@ def main(argv):
         domain_training_type = args.domain_training_type
         domain_to_train = args.domain_to_train
         num_iters = args.num_iters
+        test_category = args.test_category
 
+        if test_category != None:
+            config['inputs']['share']['test_category'] = test_category
         if num_iters != None:
             config['global']['num_iters'] = int(num_iters)
         if domain_to_train != None:

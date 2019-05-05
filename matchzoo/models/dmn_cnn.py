@@ -147,7 +147,10 @@ class DMN_CNN(BasicModel):
 
         # MLP
         if self.config['target_mode'] == 'classification':
-            out_ = Dense(2, activation='softmax')(accum_stack_gru_hidden_flat_drop)
+            number_of_domains = 2
+            if 'number_of_categories' in self.config:
+                number_of_domains = self.config['number_of_categories']
+            out_ = Dense(number_of_domains, activation='softmax')(accum_stack_gru_hidden_flat_drop)
         elif self.config['target_mode'] in ['regression', 'ranking']:
             out_ = Dense(1)(accum_stack_gru_hidden_flat_drop)
         # show_layer_info('Dense', out_)
