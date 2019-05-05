@@ -990,11 +990,11 @@ class DMN_PairGeneratorFilterTargetTopic(PairBasicGenerator):
         for i in range(self.batch_size):
             #print 'get_batch_static test i = ', i
             d1, d2p, d2n = random.choice(self.pair_list)
-            domain = self.cat_to_id[self.queries_to_cat[d1]]
+            domain = self.queries_to_cat[d1]
             while domain == self.cat_to_filter:
                 print('filtered doc')
                 d1, d2p, d2n = random.choice(self.pair_list)
-                domain = self.cat_to_id[self.queries_to_cat[d1]]
+                domain = self.queries_to_cat[d1]
 
             # print 'd1, d2p, d2n  = ', d1, d2p, d2n
             # print 'self.data2[d2p] = ', self.data2[d2p]
