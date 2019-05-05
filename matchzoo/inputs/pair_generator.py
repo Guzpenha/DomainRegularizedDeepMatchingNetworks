@@ -992,7 +992,7 @@ class DMN_PairGeneratorFilterTargetTopic(PairBasicGenerator):
             d1, d2p, d2n = random.choice(self.pair_list)
             domain = self.queries_to_cat[d1]
             while domain == self.cat_to_filter:
-                print('filtered doc')
+                # print('filtered doc')
                 d1, d2p, d2n = random.choice(self.pair_list)
                 domain = self.queries_to_cat[d1]
 
