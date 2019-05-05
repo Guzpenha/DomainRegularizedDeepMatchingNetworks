@@ -22,7 +22,7 @@ CATEGORY='MSN'
 #========================================#
 
 TRAINING_TYPE='None'
-srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --domain_to_train 0
+# srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --domain_to_train 0
 srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters $NUM_ITERS --predict_ood False
 
 #========================================#

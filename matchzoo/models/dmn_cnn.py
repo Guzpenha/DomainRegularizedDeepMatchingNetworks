@@ -139,7 +139,10 @@ class DMN_CNN(BasicModel):
         in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
         # show_layer_info('in_domain_clf', in_domain_clf)
 
-        out_domain = Dense(2, activation='softmax')(in_domain_clf)
+        number_of_domains = 2
+        if 'number_of_categories' in self.config:
+            number_of_domains = self.config['number_of_categories']
+        out_domain = Dense(number_of_domains, activation='softmax')(in_domain_clf)
         # show_layer_info('out_domain', out_domain)
 
         model_clf = Model(inputs=[query, doc], outputs=out_domain)
@@ -147,10 +150,7 @@ class DMN_CNN(BasicModel):
 
         # MLP
         if self.config['target_mode'] == 'classification':
-            number_of_domains = 2
-            if 'number_of_categories' in self.config:
-                number_of_domains = self.config['number_of_categories']
-            out_ = Dense(number_of_domains, activation='softmax')(accum_stack_gru_hidden_flat_drop)
+            out_ = Dense(2, activation='softmax')(accum_stack_gru_hidden_flat_drop)
         elif self.config['target_mode'] in ['regression', 'ranking']:
             out_ = Dense(1)(accum_stack_gru_hidden_flat_drop)
         # show_layer_info('Dense', out_)
