@@ -71,20 +71,24 @@ class DMN_CNN(BasicModel):
         # show_layer_info('Doc Embedding', d_embed)
         accum_stack = []
 
-        input_to_doman_clf = None
+        q_embeds = []
+        q_bigru_reps = []
+        d_bigru_reps = []
         for i in range(self.config['text1_max_utt_num']):
             self.i = i
             query_cur_utt = Lambda(slice_reshape)(query)
             # show_layer_info('query_cur_utt', query_cur_utt)
             q_embed = embedding(query_cur_utt)
-            if(i==0):
-                input_to_doman_clf = q_embed
+            q_embeds.append(q_embed)
+
             # show_layer_info('Query Embedding', q_embed)
             q_rep = Bidirectional(
                 GRU(self.config['hidden_size'], return_sequences=True, dropout=self.config['dropout_rate']))(q_embed)
+            q_bigru_reps.append(q_rep)
             # show_layer_info('Bidirectional-GRU', q_rep)
             d_rep = Bidirectional(
                 GRU(self.config['hidden_size'], return_sequences=True, dropout=self.config['dropout_rate']))(d_embed)
+            d_bigru_reps.append(d_rep)
             # show_layer_info('Bidirectional-GRU', d_rep)
 
             cross1 = Match(match_type='dot')([q_embed, d_embed]) # dot product of embeddings (Can try other interaction functions here such as cosine, ind, bi-linear, etc.)
@@ -127,21 +131,24 @@ class DMN_CNN(BasicModel):
             flip_grad = False
 
         Flip = GradientReversal(self.l, really_flip=flip_grad)
-        # in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
-        # in_domain_clf = Flip(q_rep)
-        # in_domain_clf = Flip(q_embed)
-        # d1_flatten = Flatten()(d_embed)
-        # d2_flatten = Flatten()(d_rep)
-        # doc_flatten = concatenate([d1_flatten, d2_flatten])
-        # in_domain_clf = Flip(doc_flatten)
 
-        # in_domain_clf = Flip(Flatten()(input_to_doman_clf))
-        in_domain_clf = Flip(accum_stack_gru_hidden_flat_drop)
+        word_embed_rep = Flatten()(concatenate(q_embeds + [d_embed]))
+        word_bigru_rep = Flatten()(concatenate(q_bigru_reps + d_bigru_reps))
+        q_d_rep = concatenate([word_embed_rep,word_bigru_rep])
+
+        match_representations = accum_stack_gru_hidden_flat_drop
+        if 'input_to_domain_clf' in self.config and self.config['input_to_domain_clf'] == 'query_doc':
+            in_domain_clf = Flip(q_d_rep)
+        else:
+            in_domain_clf = Flip(match_representations)
+
         # show_layer_info('in_domain_clf', in_domain_clf)
 
         number_of_domains = 2
         if 'number_of_categories' in self.config:
             number_of_domains = self.config['number_of_categories']
+        elif 'train_clf_with_ood' in self.config and self.config['train_clf_with_ood']:
+            number_of_domains = 3
         out_domain = Dense(number_of_domains, activation='softmax')(in_domain_clf)
         # show_layer_info('out_domain', out_domain)
 

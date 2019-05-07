@@ -29,6 +29,9 @@ def map(y_true, y_pred, rel_threshold=0):
         s /= ipos
     return s
 
+def calculate_map(r):
+    return map(r["label"].tolist(), r["score"].tolist())
+
 def mrr(y_true, y_pred, rel_threshold = 0.):
     k = 10
     s = 0.

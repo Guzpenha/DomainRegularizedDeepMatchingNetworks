@@ -16,7 +16,6 @@ cd matchzoo
 
 
 NUM_ITERS=100
-BATCH_SIZE_NON_UDC=50
 
 #========================================#
 #               DMN                      #
@@ -36,14 +35,14 @@ srun python main_conversation_qa.py --phase predict --model_file config/udc_appl
 #       Train on Apple           #
 #--------------------------------#
 
-srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
+srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False 
 srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters $NUM_ITERS --predict_ood False
 
 #--------------------------------#
 #       Train on Both            #
 #--------------------------------#
 
-srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
+srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False 
 srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters $NUM_ITERS --predict_ood True
 
 
@@ -59,7 +58,7 @@ TRAINING_TYPE='DMN-ADL'
 
 # udc -> apple
 srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 0 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False
-srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood False
+srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood False --statistical_test 't-test'
 
 
 #--------------------------------#
@@ -67,15 +66,15 @@ srun python main_conversation_qa.py --phase predict --model_file config/udc_appl
 #--------------------------------#
 
 # apple -> udc
-srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
-srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood False
+srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False 
+srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood False --statistical_test 't-test'
 
 #--------------------------------#
 #       Train on Both            #
 #--------------------------------#
 
-srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
-srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood True
+srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False 
+srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood True --statistical_test 't-test'
 
 
 #========================================#
@@ -89,8 +88,8 @@ TRAINING_TYPE='DMN-MTL'
 #--------------------------------#
 
 # udc -> apple
-srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 0 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False
-srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood False
+srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 0 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --input_to_domain_clf 'query_doc'
+srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood False --statistical_test 't-test'
 
 
 #--------------------------------#
@@ -98,12 +97,12 @@ srun python main_conversation_qa.py --phase predict --model_file config/udc_appl
 #--------------------------------#
 
 # apple -> udc
-srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
-srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood False
+srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False  --input_to_domain_clf 'query_doc'
+srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood False --statistical_test 't-test'
 
 #--------------------------------#
 #       Train on Both            #
 #--------------------------------#
 
-srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --train_batch_size $BATCH_SIZE_NON_UDC
-srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood True
+srun python main_conversation_qa.py --phase train --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False  --input_to_domain_clf 'query_doc'
+srun python main_conversation_qa.py --phase predict --model_file config/udc_apple/dmn_cnn_udc_apple.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood True --statistical_test 't-test'

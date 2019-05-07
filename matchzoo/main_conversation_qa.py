@@ -24,6 +24,8 @@ from losses import *
 import os.path
 from tqdm import tqdm
 import pickle
+import pandas as pd
+from scipy import stats
 
 def load_model(config):
     global_conf = config["global"]
@@ -100,7 +102,7 @@ def train(config):
             datapath = input_conf[tag]['qa_comat_file']
             if datapath not in dataset:
                 dataset[datapath] = read_qa_comat(datapath)
-        if (share_input_conf["predict_ood"]):
+        if (share_input_conf["predict_ood"] or ('train_clf_with_ood' in share_input_conf and share_input_conf['train_clf_with_ood'])):
             if 'text1_corpus_ood' in input_conf[tag]:
                 datapath = input_conf[tag]['text1_corpus_ood']
                 if datapath not in dataset:
@@ -122,6 +124,10 @@ def train(config):
         if 'qa_comat_file' in share_input_conf:
             conf['qa_comat'] = dataset[conf['qa_comat_file']]
         generator = inputs.get(conf['input_type'])
+
+        if(tag == 'train_clf' and 'train_clf_with_ood' in share_input_conf and share_input_conf['train_clf_with_ood']):
+            conf['data1_ood'] = dataset[input_eval_conf['eval_predict_in']['text1_corpus_ood']]
+            conf['data2_ood'] = dataset[input_eval_conf['eval_predict_in']['text1_corpus_ood']]
         train_gen[tag] = generator( config = conf )
 
     for tag, conf in input_eval_conf.items():
@@ -169,6 +175,7 @@ def train(config):
 
     model_clf.compile(optimizer=optimizer, loss=custom_loss)
     print '[Model] Domain classifier model Compile Done.'
+    # print(model_clf.summary())
 
     if(share_input_conf['predict'] == 'False'):
         if('test' in eval_gen):
@@ -185,7 +192,13 @@ def train(config):
     alternate_per_batch = False
     if(alternate_per_batch):
         print("training alternated batches.")
+    initial_clf_weights = model_clf.layers[-1].get_weights()
     for i_e in range(num_iters):
+        if('reset_clf_weights_iters' in share_input_conf):
+            if(i_e+1) % share_input_conf['reset_clf_weights_iters'] == 0:
+                print("Resetting clf dense layer weights.")
+                model_clf.layers[-1].set_weights(initial_clf_weights)
+
         if(alternate_per_batch and (share_input_conf["domain_training_type"] == "DMN-ADL" \
             or share_input_conf["domain_training_type"] == "DMN-MTL")):
             for i in range(display_interval):
@@ -260,6 +273,8 @@ def train(config):
         if (i_e+1) % save_weights_iters == 0:
             path_to_save = weights_file
             # if('domain_to_train' in input_conf['train'] and input_conf['train']['domain_to_train'] != -1):
+
+            #training on multiple domain dataset
             if('train' in input_conf and 'domain_to_train' in input_conf['train']):
                 path_to_save = weights_file+str(input_conf['train']['domain_to_train']+1)*5
                 if(share_input_conf["domain_training_type"] == "DMN-ADL"):
@@ -269,6 +284,7 @@ def train(config):
                 else:
                     model.save_weights(path_to_save % (i_e+offset+1))
 
+            #training only on one domain datasets:
             if(share_input_conf["domain_training_type"] == "DMN-ADL"):
                 model.save_weights(weights_file % (i_e+offset+1+1000))
             elif(share_input_conf["domain_training_type"] == "DMN-MTL"):
@@ -453,6 +469,7 @@ def predict(config):
 
                 num_valid += len(list_counts) - 1
                 # if(num_valid > 3479):
+                # if(num_valid > 500):
                     # break
             else:
                 for k, eval_func in eval_metrics.items():
@@ -479,7 +496,20 @@ def predict(config):
                 pickle.dump(utterances_w_emb, handle, protocol=pickle.HIGHEST_PROTOCOL)
         if tag in output_conf:
             if output_conf[tag]['save_format'] == 'TREC':
-                with open(output_conf[tag]['save_path'], 'w') as f:
+                suffix = ""                
+                if(len(str(global_conf['test_weights_iters']))==9):
+                    if(str(global_conf['test_weights_iters'])[0]=='1'):
+                        suffix="_ADL"
+                    else:
+                        suffix="_MTL"
+                    if(str(global_conf['test_weights_iters'])[-5:] == '11111'):
+                        suffix+="_trained_on_domain_1"
+                    elif(str(global_conf['test_weights_iters'])[-5:] == '22222'):
+                        suffix+="_trained_on_domain_2"
+                    else:
+                        suffix+="_trained_on_both"
+
+                with open(output_conf[tag]['save_path']+suffix, 'w') as f:
                     for qid, dinfo in res_scores.items():
                         dinfo = sorted(dinfo.items(), key=lambda d:d[1][0], reverse=True)
                         for inum,(did, (score, gt)) in enumerate(dinfo):
@@ -490,9 +520,41 @@ def predict(config):
                         dinfo = sorted(dinfo.items(), key=lambda d:d[1][0], reverse=True)
                         for inum,(did, (score, gt)) in enumerate(dinfo):
                             print >> f, '%s %s %s %s'%(gt, qid, did, score)
+
+            pvalue_sufix=""
+            if('statistical_test' in share_input_conf and share_input_conf['statistical_test'] == 't-test'):
+                file_baseline = output_conf[tag]['save_path']
+                file_current_model = output_conf[tag]['save_path']+suffix
+                print('baseline file: ' + file_baseline)
+                print('file current model:' + file_current_model)
+                res_baseline = pd.read_csv(file_baseline, \
+                    sep="\t", names=["Q","_", "D", "rank", "score", "model", "label"])
+                res_current_model = pd.read_csv(file_current_model, \
+                    sep="\t", names=["Q","_", "D", "rank", "score", "model", "label"])
+
+                calc_metric = metrics.get('calculate_map')
+
+                df_ap_baseline = res_baseline.groupby(["Q"])['label','score']\
+                    .apply(lambda r,f = calc_metric: f(r)).reset_index()
+                df_ap_baseline.columns = ["Q", "ap_baseline"]
+
+                df_ap_current_model = res_current_model.groupby(["Q"])['label','score']\
+                    .apply(lambda r,f = calc_metric: f(r)).reset_index()
+                df_ap_current_model.columns = ["Q", "ap_current_model"]
+
+                df_ap_both = df_ap_baseline.merge(df_ap_current_model, on='Q')
+
+                statistic, pvalue = stats.ttest_rel(df_ap_both['ap_baseline'], df_ap_both['ap_current_model'])
+                if(pvalue<0.01):
+                    pvalue_sufix="$^{\\ddagger}$"
+                elif(pvalue<0.05):
+                    pvalue_sufix="$^{\\dagger}$"
+                print('pvalue '+str(pvalue))
+
         print("valids:", num_valid)
-        print '[Predict] results: ', '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()])
+        print '[Predict] results: ', '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]), pvalue_sufix
         sys.stdout.flush()
+
 
 def main(argv):
     parser = argparse.ArgumentParser()
@@ -530,6 +592,10 @@ def main(argv):
     parser.add_argument('--domain_to_train', help='train in only one source domain or all (-1)')
     parser.add_argument('--num_iters', help='number of iters')
     parser.add_argument('--test_category', help='used for setting the out of domain topic for MSDialog topic as domain experiments')
+    parser.add_argument('--input_to_domain_clf', help='whether to use <query_doc> representations or <match> representations')
+    parser.add_argument('--statistical_test', help='test against baseline or not')
+    parser.add_argument('--reset_clf_weights_iters', help='if set to a value the domain clf weights will reset every <reset_clf_weights_iters> iterations')
+    parser.add_argument('--train_clf_with_ood', help='use ood instances for training clf (to be used with training on both source domains)')
 
 
     args = parser.parse_args()
@@ -568,7 +634,21 @@ def main(argv):
         domain_to_train = args.domain_to_train
         num_iters = args.num_iters
         test_category = args.test_category
+        input_to_domain_clf = args.input_to_domain_clf
+        statistical_test = args.statistical_test
+        reset_clf_weights_iters = args.reset_clf_weights_iters
+        train_clf_with_ood = args.train_clf_with_ood
 
+        if train_clf_with_ood != None:
+            config['inputs']['share']['train_clf_with_ood'] = train_clf_with_ood == 'True'
+            if config['inputs']['share']['train_clf_with_ood']:
+                config['inputs']['share']['relation_file_ood'] = config['inputs']['predict_ood']['relation_file_ood']
+        if reset_clf_weights_iters != None:
+            config['inputs']['share']['reset_clf_weights_iters'] = int(reset_clf_weights_iters)
+        if statistical_test != None:
+            config['inputs']['share']['statistical_test'] = statistical_test
+        if input_to_domain_clf != None:
+            config['inputs']['share']['input_to_domain_clf'] = input_to_domain_clf
         if test_category != None:
             config['inputs']['share']['test_category'] = test_category
         if num_iters != None:

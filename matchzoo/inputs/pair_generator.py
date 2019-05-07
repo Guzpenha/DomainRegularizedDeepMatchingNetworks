@@ -739,7 +739,7 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
             size = int(f.read().split("Q")[1])
             self.train_domain_division = size
 
-        self.balanced_domain_batches = config['balanced_domain_batches']
+        self.balanced_domain_batches = config['balanced_domain_batches'] # does not work with 3 domains and False
         if(self.balanced_domain_batches):            
             self.d1_pair_list = []
             self.d2_pair_list = []
@@ -750,6 +750,11 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
                 else:
                     self.d2_pair_list.append(triplet)
 
+        if('train_clf_with_ood' in config and config['train_clf_with_ood']):            
+            self.rel_ood = read_relation(filename=config['relation_file_ood'])
+            self.pair_list_ood = self.make_pair_static(self.rel_ood)
+            self.data1_ood = config['data1_ood']
+            self.data2_ood = config['data2_ood']
         print '[DMN_PairGeneratorMultipleDomainsWithLabels] init done'
 
     def get_batch_static(self):
@@ -761,47 +766,75 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
         Y[::2] = 1 # [1,0,1,0,1,0,...]
         X1[:] = self.fill_word # the default word index is the last word, which is the added PAD word
         X2[:] = self.fill_word
-        Y_domain = np.zeros((self.batch_size*2, 2), dtype=np.int32)
+        number_of_domains = 2
+        if('train_clf_with_ood' in self.config and \
+                self.config['train_clf_with_ood']):
+            number_of_domains = 3
+        Y_domain = np.zeros((self.batch_size*2, number_of_domains), dtype=np.int32)
         for i in range(self.batch_size):
             #print 'get_batch_static test i = ', i
             if(not self.balanced_domain_batches):
                 rand_idx = random.choice(range(len(self.pair_list)))
                 d1, d2p, d2n = self.pair_list[rand_idx]
-            elif(i<self.batch_size/2.0):
-                rand_idx = random.choice(range(len(self.d1_pair_list)))
-                d1, d2p, d2n = self.d1_pair_list[rand_idx]
+                domain = int(int(d1.split("Q")[1])<self.train_domain_division)
+            elif('train_clf_with_ood' in self.config and self.config['train_clf_with_ood']):
+                list_to_use = random.choice(range(3))
+                if list_to_use == 0:
+                    rand_idx = random.choice(range(len(self.d1_pair_list)))
+                    d1, d2p, d2n = self.d1_pair_list[rand_idx]
+                elif list_to_use == 1:
+                    rand_idx = random.choice(range(len(self.d2_pair_list)))
+                    d1, d2p, d2n = self.d2_pair_list[rand_idx]    
+                else:
+                    rand_idx = random.choice(range(len(self.pair_list_ood)))
+                    d1, d2p, d2n = self.pair_list_ood[rand_idx]
+                domain = list_to_use
             else:
-                rand_idx = random.choice(range(len(self.d2_pair_list)))
-                d1, d2p, d2n = self.d2_pair_list[rand_idx]
+                if(i<self.batch_size/2.0):
+                    rand_idx = random.choice(range(len(self.d1_pair_list)))
+                    d1, d2p, d2n = self.d1_pair_list[rand_idx]
+                else:
+                    rand_idx = random.choice(range(len(self.d2_pair_list)))
+                    d1, d2p, d2n = self.d2_pair_list[rand_idx]    
+                domain = int(int(d1.split("Q")[1])<self.train_domain_division)
 
-            #10 because we have 9 candidates for each true response
-            domain = int(int(d1.split("Q")[1])<self.train_domain_division)            
+            if('train_clf_with_ood' in self.config and \
+                self.config['train_clf_with_ood'] and list_to_use == 2):
+                data1 = self.data1_ood
+                data2 = self.data2_ood
+            else:
+                data1 = self.data1
+                data2 = self.data2
+
+            while(d1 not in data1 and domain == 2):
+                rand_idx = random.choice(range(len(self.pair_list_ood)))
+                d1, d2p, d2n = self.pair_list_ood[rand_idx]
 
             # print 'd1, d2p, d2n  = ', d1, d2p, d2n
             # print 'self.data2[d2p] = ', self.data2[d2p]
-            if len(self.data2[d2p]) == 0:
+            if len(data2[d2p]) == 0:
                 d2p_ws = [self.fill_word]
             else:
-                d2p_ws = self.data2[d2p][0].split()
-            if len(self.data2[d2n]) == 0:
+                d2p_ws = data2[d2p][0].split()
+            if len(data2[d2n]) == 0:
                 d2n_ws = [self.fill_word]
             else:
-                d2n_ws = self.data2[d2n][0].split()
+                d2n_ws = data2[d2n][0].split()
             d2p_len = min(self.data2_maxlen, len(d2p_ws))
             d2n_len = min(self.data2_maxlen, len(d2n_ws))
-            # print 'self.data1[d1] = ', self.data1[d1]
+            # print 'data1[d1] = ', data1[d1]
             # print 'd2p_len, d2n_len  = ', d2p_len, d2n_len
-            # print 'data2[d2p], data2[d2n]  = ', self.data2[d2p], self.data2[d2n]
+            # print 'data2[d2p], data2[d2n]  = ', data2[d2p], data2[d2n]
             X2[i * 2, :d2p_len], X2_len[i * 2] = d2p_ws[:d2p_len], d2p_len
             X2[i * 2 + 1, :d2n_len], X2_len[i * 2 + 1] = d2n_ws[:d2n_len], d2n_len
-            # if len(self.data1[d1]) > 10, we only keep the most recent 10 utterances
-            utt_start = 0 if len(self.data1[d1]) < self.data1_max_utt_num else (len(self.data1[d1])-self.data1_max_utt_num)
+            # if len(data1[d1]) > 10, we only keep the most recent 10 utterances
+            utt_start = 0 if len(data1[d1]) < self.data1_max_utt_num else (len(data1[d1])-self.data1_max_utt_num)
             # print 'test utt_start ', utt_start
-            # print 'test len(self.data1[d1]) ', len(self.data1[d1])
-            for j in range(utt_start, len(self.data1[d1])):
+            # print 'test len(data1[d1]) ', len(data1[d1])
+            for j in range(utt_start, len(data1[d1])):
                 # print 'test j ', j
                 # print 'test utt_start ', utt_start
-                d1_ws = self.data1[d1][j].split()
+                d1_ws = data1[d1][j].split()
                 d1_len = min(self.data1_maxlen, len(d1_ws))
                 X1[i*2, j-utt_start, :d1_len],  X1_len[i*2, j-utt_start]   = d1_ws[:d1_len], d1_len
                 X1[i*2+1, j-utt_start, :d1_len],  X1_len[i*2+1, j-utt_start] = d1_ws[:d1_len], d1_len
