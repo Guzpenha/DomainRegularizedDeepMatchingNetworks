@@ -417,33 +417,47 @@ def predict(config):
                         q = ('Q'+str(9900000+ int(q.split('Q')[1])))
                     if(q not in utterances_w_emb):
                         utterances_w_emb[q] = {}
-                    utterances_w_emb[q]['match_rep'] = batch_match_embedding[pre:suf].flatten()
+                    utterances_w_emb[q]['match_rep'] = batch_match_embedding[pre:pre+1]
 
                 # GRU sentence representations
-                # utterances_bigru = []
-                # for i in range(config['inputs']['share']['text1_max_utt_num'] * 2):
-                #     if((i+1)%2!=0):
-                #         print(i+1)
-                #         intermediate_layer_model = Model(inputs=model.input,
-                #                                          outputs=model.get_layer('bidirectional_'+str(i+1)).output)
-                #         utterances_bigru.append(intermediate_layer_model.predict(input_data, batch_size=len(y_true)))
+                utterances_bigru = []
+                for i in range(config['inputs']['share']['text1_max_utt_num'] * 2):
+                    if((i+1)%2!=0):
+                        # print(i+1)
+                        intermediate_layer_model = Model(inputs=model.input,
+                                                         outputs=model.get_layer('bidirectional_'+str(i+1)).output)
+                        utterances_bigru.append(intermediate_layer_model.predict(input_data, batch_size=len(y_true)))
+
+                list_counts = input_data['list_counts']
+                for lc_idx in range(len(list_counts)-1):
+                    pre = list_counts[lc_idx]
+                    suf = list_counts[lc_idx+1]
+                    q = input_data['ID'][pre:pre+1][0][0]
+                    if(tag == 'predict_ood'):
+                        q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                    if(q not in utterances_w_emb):
+                        utterances_w_emb[q] = {}
+                    first_turn_bigru = utterances_bigru[0]                        
+                    first_turn_bigru = first_turn_bigru.reshape(first_turn_bigru.shape[0],-1)
+                    utterances_w_emb[q]['turn_1_bigru'] = first_turn_bigru[pre:pre+1]
 
 
                 #Word embedding sentence representations                
-                # for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
-                #     intermediate_layer_model = Model(inputs=model.input,
-                #                                      outputs=model.get_layer('embedding_1').get_output_at(i+1))
-                #     batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
-                #     list_counts = input_data['list_counts']
-                #     for lc_idx in range(len(list_counts)-1):
-                #         pre = list_counts[lc_idx]
-                #         suf = list_counts[lc_idx+1]
-                #         q = input_data['ID'][pre:pre+1][0][0]
-                #         if(tag == 'predict_ood'):
-                #             q = ('Q'+str(9900000+ int(q.split('Q')[1])))
-                #         if(q not in utterances_w_emb):
-                #             utterances_w_emb[q] = {}
-                #         utterances_w_emb[q]['turn_'+str(i+1)] = batch_embeddings[pre:suf]
+                for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
+                    intermediate_layer_model = Model(inputs=model.input,
+                                                     outputs=model.get_layer('embedding_1').get_output_at(i+1))
+                    batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
+                    batch_embeddings = batch_embeddings.reshape(batch_embeddings.shape[0],-1)
+                    list_counts = input_data['list_counts']
+                    for lc_idx in range(len(list_counts)-1):
+                        pre = list_counts[lc_idx]
+                        suf = list_counts[lc_idx+1]
+                        q = input_data['ID'][pre:pre+1][0][0]
+                        if(tag == 'predict_ood'):
+                            q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                        if(q not in utterances_w_emb):
+                            utterances_w_emb[q] = {}
+                        utterances_w_emb[q]['turn_'+str(i+1)] = batch_embeddings[pre:pre+1]
 
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator) or \
