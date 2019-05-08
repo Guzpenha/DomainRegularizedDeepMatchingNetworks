@@ -16,6 +16,7 @@ cd matchzoo
 
 
 NUM_ITERS=100
+RESET_CLF_WEIGHTS=5
 
 #========================================#
 #               DMN                      #
@@ -28,7 +29,7 @@ TRAINING_TYPE='None'
 #--------------------------------#
 
 srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 0 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False 
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS --predict_ood False
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS11111 --predict_ood False
 
 
 #--------------------------------#
@@ -36,7 +37,7 @@ srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/d
 #--------------------------------#
 
 srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS --predict_ood False
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS22222 --predict_ood False
 
 
 #--------------------------------#
@@ -44,7 +45,7 @@ srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/d
 #--------------------------------#
 
 srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False 
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS --predict_ood True
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters $NUM_ITERS00000 --predict_ood True
 
 
 #========================================#
@@ -57,23 +58,23 @@ TRAINING_TYPE='DMN-ADL'
 #       Train on MSDialog        #
 #--------------------------------#
 
-srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 0 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False 
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood False --statistical_test 't-test'
+srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 0 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False  --reset_clf_weights_iters $RESET_CLF_WEIGHTS
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS11111 --predict_ood False --statistical_test 't-test'
 
 #--------------------------------#
 #       Train on UDC             #
 #--------------------------------#
 
 
-srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood False --statistical_test 't-test'
+srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --reset_clf_weights_iters $RESET_CLF_WEIGHTS
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS22222 --predict_ood False --statistical_test 't-test'
  
 #--------------------------------#
 #       Train on Both            #
 #--------------------------------#
 
-srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False  --input_to_domain_clf 'query_doc' --train_clf_with_ood True
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS --predict_ood True --statistical_test 't-test'
+srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False  --train_clf_with_ood True --reset_clf_weights_iters $RESET_CLF_WEIGHTS
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1$NUM_ITERS00000 --predict_ood True --statistical_test 't-test'
 
 #========================================#
 #               DMN-MTL                  #
@@ -86,19 +87,19 @@ TRAINING_TYPE='DMN-MTL'
 #--------------------------------#
 
 srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 0 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False  --input_to_domain_clf 'query_doc'
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood False --statistical_test 't-test'
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS11111 --predict_ood False --statistical_test 't-test'
 
 #--------------------------------#
 #       Train on UDC             #
 #--------------------------------#
 
-srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood False --statistical_test 't-test'
+srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --input_to_domain_clf 'query_doc' 
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS22222 --predict_ood False --statistical_test 't-test'
 
 #--------------------------------#
 #       Train on Both            #
 #--------------------------------#
 
 srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train -1 --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False  --input_to_domain_clf 'query_doc' --train_clf_with_ood True
-srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS --predict_ood True --statistical_test 't-test'
+srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2$NUM_ITERS00000 --predict_ood True --statistical_test 't-test'
 

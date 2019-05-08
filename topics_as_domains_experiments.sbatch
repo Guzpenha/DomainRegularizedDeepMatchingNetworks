@@ -16,6 +16,7 @@ cd matchzoo
 
 
 NUM_ITERS=100
+RESET_CLF_WEIGHTS=5
 
 for CATEGORY in 'MSN' 'Onedrive' 'IE_7' 'Windows_7' 'Outlook_Contacts' 'Microsoft_Band' 'Defender' 'Office_Install' 'Lumia' 'Outlook'
 do
@@ -32,7 +33,7 @@ do
 	#========================================#
 
 	TRAINING_TYPE='DMN-ADL'
-	srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --domain_to_train 0
+	srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters $NUM_ITERS --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS
 	srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 1$NUM_ITERS --predict_ood False --statistical_test 't-test'
 
 	#========================================#

@@ -509,6 +509,8 @@ def predict(config):
             with open(config['global']['representations_save_path']+'q_rep.pickle', 'wb') as handle:
                 pickle.dump(utterances_w_emb, handle, protocol=pickle.HIGHEST_PROTOCOL)
         if tag in output_conf:
+            if(tag == "predict_ood" and not share_input_conf["predict_ood"]):
+                continue
             if output_conf[tag]['save_format'] == 'TREC':
                 suffix = ""                
                 if(len(str(global_conf['test_weights_iters']))==9):
@@ -536,7 +538,9 @@ def predict(config):
                             print >> f, '%s %s %s %s'%(gt, qid, did, score)
 
             pvalue_sufix=""
-            if('statistical_test' in share_input_conf and share_input_conf['statistical_test'] == 't-test'):
+            if('statistical_test' in share_input_conf and share_input_conf['statistical_test'] == 't-test'\
+                and tag in ['predict_in', 'predict_ood', 'predict_out']):
+
                 file_baseline = output_conf[tag]['save_path']
                 file_current_model = output_conf[tag]['save_path']+suffix
                 print('baseline file: ' + file_baseline)
