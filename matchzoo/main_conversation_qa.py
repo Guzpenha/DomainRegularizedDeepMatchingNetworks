@@ -389,6 +389,8 @@ def predict(config):
             eval_metrics[mobj] = metrics.get(mobj)
 
     save_query_representation=False
+    if 'save_query_representation' in share_input_conf:
+        save_query_representation = True
     if(save_query_representation):
         utterances_w_emb = {}
     print(predict_gen)
@@ -404,50 +406,11 @@ def predict(config):
             y_pred = model.predict(input_data, batch_size=len(y_true))
 
             if(save_query_representation):
-                # match representations
-                match_representation_layer_model = Model(inputs=model.input,
-                                                         outputs=model.get_layer('reshape_'+str(config['inputs']['share']['text1_max_utt_num']+1)).output)
-                batch_match_embedding = match_representation_layer_model.predict(input_data, batch_size=len(y_true))
-                list_counts = input_data['list_counts']
-                for lc_idx in range(len(list_counts)-1):
-                    pre = list_counts[lc_idx]
-                    suf = list_counts[lc_idx+1]
-                    q = input_data['ID'][pre:pre+1][0][0]
-                    if(tag == 'predict_ood'):
-                        q = ('Q'+str(9900000+ int(q.split('Q')[1])))
-                    if(q not in utterances_w_emb):
-                        utterances_w_emb[q] = {}
-                    utterances_w_emb[q]['match_rep'] = batch_match_embedding[pre:pre+1]
-
-                # GRU sentence representations
-                utterances_bigru = []
-                for i in range(config['inputs']['share']['text1_max_utt_num'] * 2):
-                    if((i+1)%2!=0):
-                        # print(i+1)
-                        intermediate_layer_model = Model(inputs=model.input,
-                                                         outputs=model.get_layer('bidirectional_'+str(i+1)).output)
-                        utterances_bigru.append(intermediate_layer_model.predict(input_data, batch_size=len(y_true)))
-
-                list_counts = input_data['list_counts']
-                for lc_idx in range(len(list_counts)-1):
-                    pre = list_counts[lc_idx]
-                    suf = list_counts[lc_idx+1]
-                    q = input_data['ID'][pre:pre+1][0][0]
-                    if(tag == 'predict_ood'):
-                        q = ('Q'+str(9900000+ int(q.split('Q')[1])))
-                    if(q not in utterances_w_emb):
-                        utterances_w_emb[q] = {}
-                    first_turn_bigru = utterances_bigru[0]                        
-                    first_turn_bigru = first_turn_bigru.reshape(first_turn_bigru.shape[0],-1)
-                    utterances_w_emb[q]['turn_1_bigru'] = first_turn_bigru[pre:pre+1]
-
-
-                #Word embedding sentence representations                
-                for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
-                    intermediate_layer_model = Model(inputs=model.input,
-                                                     outputs=model.get_layer('embedding_1').get_output_at(i+1))
-                    batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
-                    batch_embeddings = batch_embeddings.reshape(batch_embeddings.shape[0],-1)
+                if(share_input_conf['save_query_representation'] == 'match'):
+                    # match representations
+                    match_representation_layer_model = Model(inputs=model.input,
+                                                             outputs=model.get_layer('reshape_'+str(config['inputs']['share']['text1_max_utt_num']+1)).output)
+                    batch_match_embedding = match_representation_layer_model.predict(input_data, batch_size=len(y_true))
                     list_counts = input_data['list_counts']
                     for lc_idx in range(len(list_counts)-1):
                         pre = list_counts[lc_idx]
@@ -457,7 +420,47 @@ def predict(config):
                             q = ('Q'+str(9900000+ int(q.split('Q')[1])))
                         if(q not in utterances_w_emb):
                             utterances_w_emb[q] = {}
-                        utterances_w_emb[q]['turn_'+str(i+1)] = batch_embeddings[pre:pre+1]
+                        utterances_w_emb[q]['match_rep'] = batch_match_embedding[pre:pre+1]
+                elif(share_input_conf['save_query_representation'] == 'text'):
+                    # GRU sentence representations
+                    utterances_bigru = []
+                    for i in range(config['inputs']['share']['text1_max_utt_num'] * 2):
+                        if((i+1)%2!=0):
+                            # print(i+1)
+                            intermediate_layer_model = Model(inputs=model.input,
+                                                             outputs=model.get_layer('bidirectional_'+str(i+1)).output)
+                            utterances_bigru.append(intermediate_layer_model.predict(input_data, batch_size=len(y_true)))
+
+                    list_counts = input_data['list_counts']
+                    for lc_idx in range(len(list_counts)-1):
+                        pre = list_counts[lc_idx]
+                        suf = list_counts[lc_idx+1]
+                        q = input_data['ID'][pre:pre+1][0][0]
+                        if(tag == 'predict_ood'):
+                            q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                        if(q not in utterances_w_emb):
+                            utterances_w_emb[q] = {}
+                        first_turn_bigru = utterances_bigru[0]                        
+                        first_turn_bigru = first_turn_bigru.reshape(first_turn_bigru.shape[0],-1)
+                        utterances_w_emb[q]['turn_1_bigru'] = first_turn_bigru[pre:pre+1]
+
+
+                    #Word embedding sentence representations                
+                    for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
+                        intermediate_layer_model = Model(inputs=model.input,
+                                                         outputs=model.get_layer('embedding_1').get_output_at(i+1))
+                        batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
+                        batch_embeddings = batch_embeddings.reshape(batch_embeddings.shape[0],-1)
+                        list_counts = input_data['list_counts']
+                        for lc_idx in range(len(list_counts)-1):
+                            pre = list_counts[lc_idx]
+                            suf = list_counts[lc_idx+1]
+                            q = input_data['ID'][pre:pre+1][0][0]
+                            if(tag == 'predict_ood'):
+                                q = ('Q'+str(9900000+ int(q.split('Q')[1])))
+                            if(q not in utterances_w_emb):
+                                utterances_w_emb[q] = {}
+                            utterances_w_emb[q]['turn_'+str(i+1)] = batch_embeddings[pre:pre+1]
 
             if issubclass(type(generator), inputs.list_generator.ListBasicGenerator) or  \
                 issubclass(type(generator), inputs.list_generator.ListOODGenerator) or \
@@ -483,8 +486,8 @@ def predict(config):
 
                 num_valid += len(list_counts) - 1
                 # if(num_valid > 3479):
-                # if(num_valid > 500):
-                    # break
+                # if(num_valid > 50):
+                #     break
             else:
                 for k, eval_func in eval_metrics.items():
                     res[k] += eval_func(y_true = y_true, y_pred = y_pred)
@@ -563,11 +566,12 @@ def predict(config):
                 df_ap_both = df_ap_baseline.merge(df_ap_current_model, on='Q')
 
                 statistic, pvalue = stats.ttest_rel(df_ap_both['ap_baseline'], df_ap_both['ap_current_model'])
-                if(pvalue<0.01):
+                if(pvalue<0.01 and statistic>0):
                     pvalue_sufix="$^{\\ddagger}$"
-                elif(pvalue<0.05):
+                elif(pvalue<0.05 and statistic>0):
                     pvalue_sufix="$^{\\dagger}$"
                 print('pvalue '+str(pvalue))
+                print('statistic '+str(statistic))
 
         print("valids:", num_valid)
         print '[Predict] results: ', '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]), pvalue_sufix
@@ -614,6 +618,7 @@ def main(argv):
     parser.add_argument('--statistical_test', help='test against baseline or not')
     parser.add_argument('--reset_clf_weights_iters', help='if set to a value the domain clf weights will reset every <reset_clf_weights_iters> iterations')
     parser.add_argument('--train_clf_with_ood', help='use ood instances for training clf (to be used with training on both source domains)')
+    parser.add_argument('--save_query_representation', help='used in predict to save the query representations either <text> or <match>')
 
 
     args = parser.parse_args()
@@ -656,7 +661,10 @@ def main(argv):
         statistical_test = args.statistical_test
         reset_clf_weights_iters = args.reset_clf_weights_iters
         train_clf_with_ood = args.train_clf_with_ood
+        save_query_representation = args.save_query_representation
 
+        if save_query_representation != None:
+            config['inputs']['share']['save_query_representation'] = save_query_representation
         if train_clf_with_ood != None:
             config['inputs']['share']['train_clf_with_ood'] = train_clf_with_ood == 'True'
             if config['inputs']['share']['train_clf_with_ood']:
