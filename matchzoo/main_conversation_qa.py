@@ -485,9 +485,8 @@ def predict(config):
                         res_scores[q][p[1]] = (y, t)
 
                 num_valid += len(list_counts) - 1
-                # if(num_valid > 3479):
-                # if(num_valid > 50):
-                #     break
+                if(save_query_representation and num_valid > 3479):
+                    break
             else:
                 for k, eval_func in eval_metrics.items():
                     res[k] += eval_func(y_true = y_true, y_pred = y_pred)
