@@ -806,15 +806,9 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
                 data1 = self.data1
                 data2 = self.data2
 
-            while(d1 not in data1 and domain == 2):
+            while(d1 not in data1 and domain == 2 and d2p not in data2 and d2n not in data2):
                 rand_idx = random.choice(range(len(self.pair_list_ood)))
                 d1, d2p, d2n = self.pair_list_ood[rand_idx]
-            while(d2p not in data2 and domain == 2):
-                rand_idx = random.choice(range(len(self.pair_list_ood)))
-                d1, d2p, d2n = self.pair_list_ood[rand_idx]
-            while(d2n not in data2 and domain == 2):
-                rand_idx = random.choice(range(len(self.pair_list_ood)))
-                d1, d2p, d2n = self.pair_list_ood[rand_idx]                
             # print 'd1, d2p, d2n  = ', d1, d2p, d2n
             # print 'self.data2[d2p] = ', self.data2[d2p]
             if len(data2[d2p]) == 0:
