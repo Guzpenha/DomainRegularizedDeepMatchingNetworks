@@ -106,11 +106,16 @@ if __name__ == '__main__':
         # rep_used = 'match_rep'
 
         for k in utterances_w_emb.keys():
-            rep = utterances_w_emb[k][rep_used].flatten()
             if(rep_used=='turn_1'):
-               rep = rep.tolist() + utterances_w_emb[k]['turn_1_bigru'].flatten().tolist()
+                rep = []
+                for turn_rep in utterances_w_emb[k].keys():
+                    rep = rep + utterances_w_emb[k][turn_rep].flatten().tolist()
+            else:
+                rep = utterances_w_emb[k][rep_used].flatten().tolist()
+
             reps.append(rep)
-            qids.append(k)        
+            qids.append(k)
+        print("each utterance has " + str(len(rep))+" dimensions")
         del(utterances_w_emb)
         print("computing PCA")
         pca_50 = PCA(n_components=50)
@@ -132,7 +137,7 @@ if __name__ == '__main__':
             elif(num > 46774):
                 domain="Apple"
             else:
-                domain="MSDialog"            
+                domain="MSDialog"
             # ms->udc
             # if( num > 9900000):
             #     domain="Apple"

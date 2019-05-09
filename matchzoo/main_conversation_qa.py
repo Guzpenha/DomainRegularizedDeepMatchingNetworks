@@ -421,7 +421,7 @@ def predict(config):
                         if(q not in utterances_w_emb):
                             utterances_w_emb[q] = {}
                         utterances_w_emb[q]['match_rep'] = batch_match_embedding[pre:pre+1]
-                elif(share_input_conf['save_query_representation'] == 'text'):
+                elif(share_input_conf['save_query_representation'] == 'sentence'):
                     # GRU sentence representations
                     utterances_bigru = []
                     for i in range(config['inputs']['share']['text1_max_utt_num'] * 2):
@@ -440,13 +440,14 @@ def predict(config):
                             q = ('Q'+str(9900000+ int(q.split('Q')[1])))
                         if(q not in utterances_w_emb):
                             utterances_w_emb[q] = {}
-                        first_turn_bigru = utterances_bigru[0]                        
-                        first_turn_bigru = first_turn_bigru.reshape(first_turn_bigru.shape[0],-1)
-                        utterances_w_emb[q]['turn_1_bigru'] = first_turn_bigru[pre:pre+1]
-
-
-                    #Word embedding sentence representations                
-                    for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
+                        for i in range(len(utterances_bigru)):
+                            turn_bigru = utterances_bigru[i]
+                            turn_bigru = turn_bigru.reshape(turn_bigru.shape[0],-1)
+                            utterances_w_emb[q]['turn_'+str(i+1)+'_bigru'] = turn_bigru[pre:pre+1]
+                elif(share_input_conf['save_query_representation'] == 'text'):
+                    #Word embedding sentence representations
+                    # for i in [0]: #range(config['inputs']['share']['text1_max_utt_num']):
+                    for i in range(config['inputs']['share']['text1_max_utt_num']):
                         intermediate_layer_model = Model(inputs=model.input,
                                                          outputs=model.get_layer('embedding_1').get_output_at(i+1))
                         batch_embeddings = intermediate_layer_model.predict(input_data, batch_size=len(y_true))
