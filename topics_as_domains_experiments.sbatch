@@ -16,7 +16,7 @@ cd matchzoo
 
 
 NUM_ITERS=100
-RESET_CLF_WEIGHTS=5
+RESET_CLF_WEIGHTS=100
 
 for CATEGORY in 'MSN' 'Onedrive' 'IE_7' 'Windows_7' 'Outlook_Contacts' 'Microsoft_Band' 'Defender' 'Office_Install' 'Lumia' 'Outlook'
 do
@@ -28,19 +28,22 @@ do
 	srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0
 	srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters ${NUM_ITERS} --predict_ood False
 
-	#========================================#
-	#               DMN-ADL                  #
-	#========================================#
+	for INPUT_TO_CLF in 'query_doc' 'match'
+	do
+		#========================================#
+		#               DMN-ADL                  #
+		#========================================#
 
-	TRAINING_TYPE='DMN-ADL'
-	srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS
-	srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 1${NUM_ITERS}11111 --predict_ood False --statistical_test 't-test'
+		TRAINING_TYPE='DMN-ADL'
+		srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF
+		srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 1${NUM_ITERS}11111 --predict_ood False --statistical_test 't-test'
 
-	#========================================#
-	#               DMN-MTL                  #
-	#========================================#
+		#========================================#
+		#               DMN-MTL                  #
+		#========================================#
 
-	TRAINING_TYPE='DMN-MTL'
-	srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --input_to_domain_clf 'query_doc'
-	srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 2${NUM_ITERS}11111 --predict_ood False --statistical_test 't-test'
+		TRAINING_TYPE='DMN-MTL'
+		srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --input_to_domain_clf $INPUT_TO_CLF
+		srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 2${NUM_ITERS}11111 --predict_ood False --statistical_test 't-test'
+	done
 done
