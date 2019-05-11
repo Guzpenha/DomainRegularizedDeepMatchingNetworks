@@ -87,6 +87,10 @@ def precision(k=10):
         return prec
     return top_k
 
+def calculate_ap_1(r):
+    p_1 = precision(1)
+    return p_1(r["label"].tolist(), r["score"].tolist())
+
 # compute recall@k
 # the input is all documents under a single query
 def recall(k=10):

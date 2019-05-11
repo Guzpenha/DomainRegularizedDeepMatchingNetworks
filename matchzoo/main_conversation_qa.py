@@ -279,8 +279,14 @@ def train(config):
                 path_to_save = weights_file+str(input_conf['train']['domain_to_train']+1)*5
                 if(share_input_conf["domain_training_type"] == "DMN-ADL"):
                     model.save_weights(path_to_save % (i_e+offset+1+1000))
+                    if('input_to_domain_clf' in share_input_conf):
+                        path_to_save = path_to_save+'_'+share_input_conf['input_to_domain_clf']
+                        model.save_weights(path_to_save % (i_e+offset+1+1000))
                 elif(share_input_conf["domain_training_type"] == "DMN-MTL"):
                     model.save_weights(path_to_save % (i_e+offset+1+2000))
+                    if('input_to_domain_clf' in share_input_conf):
+                        path_to_save = path_to_save+'_'+share_input_conf['input_to_domain_clf']
+                        model.save_weights(path_to_save % (i_e+offset+1+1000))
                 else:
                     model.save_weights(path_to_save % (i_e+offset+1))
 
@@ -373,12 +379,17 @@ def predict(config):
 
     ######## Load Model ########
     global_conf = config["global"]
-    weights_file = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
 
     model, model_clf = load_model(config)
-    model.load_weights(weights_file)
-    print ('Model loaded')
+
+    if('random_weights_predict' in share_input_conf and share_input_conf['random_weights_predict']):
+        print("Using random weights")
+    else:
+        weights_file = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
+        model.load_weights(weights_file)
+        print ('Model loaded')
     # print(model.summary())
+
     eval_metrics = OrderedDict()
     for mobj in config['metrics']:
         mobj = mobj.lower()
@@ -566,13 +577,24 @@ def predict(config):
                 df_ap_both = df_ap_baseline.merge(df_ap_current_model, on='Q')
 
                 statistic, pvalue = stats.ttest_rel(df_ap_both['ap_baseline'], df_ap_both['ap_current_model'])
-                if(pvalue<0.01 and statistic>0):
-                    pvalue_sufix="$^{\\ddagger}$"
-                elif(pvalue<0.05 and statistic>0):
-                    pvalue_sufix="$^{\\dagger}$"
-                print('pvalue '+str(pvalue))
-                print('statistic '+str(statistic))
+                print('map pvalue '+str(pvalue))
+                print('map statistic '+str(statistic))
 
+                calc_metric = metrics.get('calculate_ap_1')
+
+                df_p_baseline = res_baseline.groupby(["Q"])['label','score']\
+                    .apply(lambda r,f = calc_metric: f(r)).reset_index()
+                df_p_baseline.columns = ["Q", "p1_baseline"]
+
+                df_p_current_model = res_current_model.groupby(["Q"])['label','score']\
+                    .apply(lambda r,f = calc_metric: f(r)).reset_index()
+                df_p_current_model.columns = ["Q", "p1_current_model"]
+
+                df_p_both = df_p_baseline.merge(df_p_current_model, on='Q')
+
+                statistic, pvalue = stats.ttest_rel(df_p_both['p1_baseline'], df_p_both['p1_current_model'])
+                print('p@1 pvalue '+str(pvalue))
+                print('p@1 statistic '+str(statistic))
         print("valids:", num_valid)
         print '[Predict] results: ', '\t'.join(['%s=%f'%(k,v/num_valid) for k, v in res.items()]), pvalue_sufix
         sys.stdout.flush()
@@ -619,6 +641,7 @@ def main(argv):
     parser.add_argument('--reset_clf_weights_iters', help='if set to a value the domain clf weights will reset every <reset_clf_weights_iters> iterations')
     parser.add_argument('--train_clf_with_ood', help='use ood instances for training clf (to be used with training on both source domains)')
     parser.add_argument('--save_query_representation', help='used in predict to save the query representations either <text> or <match>')
+    parser.add_argument('--random_weights_predict', help='checked only on phase predict, wheter to use random weights or not')
 
 
     args = parser.parse_args()
@@ -662,7 +685,10 @@ def main(argv):
         reset_clf_weights_iters = args.reset_clf_weights_iters
         train_clf_with_ood = args.train_clf_with_ood
         save_query_representation = args.save_query_representation
+        random_weights_predict = args.random_weights_predict
 
+        if random_weights_predict != None:
+            config['inputs']['share']['random_weights_predict'] = random_weights_predict == 'True'
         if save_query_representation != None:
             config['inputs']['share']['save_query_representation'] = save_query_representation
         if train_clf_with_ood != None:
