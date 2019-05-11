@@ -26,6 +26,7 @@ from tqdm import tqdm
 import pickle
 import pandas as pd
 from scipy import stats
+import time
 
 def load_model(config):
     global_conf = config["global"]
@@ -380,11 +381,12 @@ def predict(config):
     ######## Load Model ########
     global_conf = config["global"]
 
-    model, model_clf = load_model(config)
-
     if('random_weights_predict' in share_input_conf and share_input_conf['random_weights_predict']):
+        tensorflow.set_random_seed(int(time.time()))
+        model, model_clf = load_model(config)
         print("Using random weights")
-    else:
+    else:        
+        model, model_clf = load_model(config)
         weights_file = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
         model.load_weights(weights_file)
         print ('Model loaded')
