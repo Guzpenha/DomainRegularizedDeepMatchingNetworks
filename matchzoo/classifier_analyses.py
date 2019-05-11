@@ -10,6 +10,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import operator
 import pickle
 from pprint import pprint
+from sklearn import svm
+from sklearn.model_selection import cross_validate
 
 def calculate_map(r):
     def map(y_true, y_pred, rel_threshold=0):
@@ -61,6 +63,23 @@ def read_embedding(filename):
     print '[%s]\n\tEmbedding size: %d' % (filename, len(embed))
     return embed
 
+def get_domain_from_query(r):
+    num = int(r["Q"].split("Q")[1])
+
+    # if( num > 9900000):
+    #     domain="UDC"
+    # elif(num > 46774):
+    #     domain="Apple"
+    # else:
+    #     domain="MSDialog"
+    # ms->udc
+    if( num > 9900000):
+        domain="Apple"
+    elif(num > 574593):
+        domain="UDC"
+    else:
+        domain="MSDialog"
+    return domain
 # python breakdown_analyses.py dmn_cnn.predict_ms.test.txtpredict_in /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/udc/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelInput/dmn_model_input/
 # python breakdown_analyses.py /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelRes/dmn_cnn.predict_ms_and_udc.test.txt /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/udc/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelInput/dmn_model_input/
 # python breakdown_analyses.py /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_apple/ModelRes/dmn_cnn.predict_ms_and_apple.test.txt /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/apple/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_apple/ModelInput/dmn_model_input/
@@ -94,7 +113,42 @@ if __name__ == '__main__':
         utt_lengths[k] = len(v)
     df_map['utterance_length'] = df_map.apply(lambda r,m=utt_lengths: m[r['Q']],axis=1)
     
-    analyze_query_representations=True
+    classify_query_representations=True
+    if(classify_query_representations):
+        with open(path_pred.split('ModelInput')[0]+'ModelRes/q_rep.pickle', 'rb') as handle:
+            utterances_w_emb = pickle.load(handle)
+        reps = []
+        qids = []
+
+        rep_used = rep_to_use
+        # rep_used = 'turn_1'
+        # rep_used = 'match_rep'
+
+        for k in utterances_w_emb.keys():
+            if(rep_used=='turn_1'):
+                rep = []
+                for turn_rep in utterances_w_emb[k].keys():
+                    rep = rep + utterances_w_emb[k][turn_rep].flatten().tolist()
+            else:
+                rep = utterances_w_emb[k][rep_used].flatten().tolist()
+
+            reps.append(rep)
+            qids.append(k)
+        print("each utterance has " + str(len(rep))+" dimensions")
+        del(utterances_w_emb)
+        qids = pd.DataFrame(qids, columns=["Q"])
+        qids["domain"] = qids.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
+        qids["labels"] = qids.apply(lambda r: int(r['domain'] == 'MSDialog'), axis=1)
+        Y = qids["labels"].values
+        X = np.array(reps)
+        clf = svm.SVC(kernel='linear', C=1)
+        scores = cross_validate(clf, X, Y, cv=5, verbose=True, n_jobs=-1, \
+            scoring=['f1_macro','f1_micro','accuracy'])
+        print('Avg accuracy: ', scores['test_accuracy'].mean())
+        # print(scores['test_f1_macro'].mean())
+        # print(scores['test_f1_micro'].mean())
+
+    analyze_query_representations=False
     if(analyze_query_representations):
         with open(path_pred.split('ModelInput')[0]+'ModelRes/q_rep.pickle', 'rb') as handle:
             utterances_w_emb = pickle.load(handle)
@@ -129,23 +183,6 @@ if __name__ == '__main__':
         df_tsne['x-tsne'] = tsne_results[:,0]
         df_tsne['y-tsne'] = tsne_results[:,1]
         df_tsne_map = df_tsne.merge(df_map, on=['Q'])
-        def get_domain_from_query(r):
-            num = int(r["Q"].split("Q")[1])
-
-            # if( num > 9900000):
-            #     domain="UDC"
-            # elif(num > 46774):
-            #     domain="Apple"
-            # else:
-            #     domain="MSDialog"
-            # ms->udc
-            if( num > 9900000):
-                domain="Apple"
-            elif(num > 574593):
-                domain="UDC"
-            else:
-                domain="MSDialog"
-            return domain
 
         df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
         df_tsne_map["ap"] = df_tsne_map["map"]
