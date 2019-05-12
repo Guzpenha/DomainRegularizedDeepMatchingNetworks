@@ -12,7 +12,7 @@ import pickle
 from pprint import pprint
 from sklearn import svm
 from sklearn.model_selection import cross_validate
-
+from sklearn import preprocessing
 def calculate_map(r):
     def map(y_true, y_pred, rel_threshold=0):
         s = 0.
@@ -80,6 +80,7 @@ def get_domain_from_query(r):
     else:
         domain="MSDialog"
     return domain
+
 # python breakdown_analyses.py dmn_cnn.predict_ms.test.txtpredict_in /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/udc/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelInput/dmn_model_input/
 # python breakdown_analyses.py /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelRes/dmn_cnn.predict_ms_and_udc.test.txt /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/udc/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelInput/dmn_model_input/
 # python breakdown_analyses.py /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_apple/ModelRes/dmn_cnn.predict_ms_and_apple.test.txt /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/apple/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_apple/ModelInput/dmn_model_input/
@@ -136,10 +137,21 @@ if __name__ == '__main__':
             qids.append(k)
         print("each utterance has " + str(len(rep))+" dimensions")
         del(utterances_w_emb)
+
         qids = pd.DataFrame(qids, columns=["Q"])
-        qids["domain"] = qids.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
-        qids["labels"] = qids.apply(lambda r: int(r['domain'] == 'MSDialog'), axis=1)
-        Y = qids["labels"].values
+        if ('ms_v2' in path):
+            cat_df = pd.read_csv("../data/ms_v2/ModelInput/ms_v2_categories.csv")
+            queries_to_cat = {}
+            for idx, row in cat_df.iterrows():
+                queries_to_cat[row['Q']]=row['category']            
+            qids["domain"] = qids.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
+            le = preprocessing.LabelEncoder()
+            Y=le.fit_transform(qids["domain"].values)
+        else:
+            get_domain = get_domain_from_query
+            qids["domain"] = qids.apply(lambda r, f = get_domain: f(r), axis=1)
+            qids["labels"] = qids.apply(lambda r: int(r['domain'] == 'MSDialog'), axis=1)
+            Y = qids["labels"].values
         X = np.array(reps)
         clf = svm.SVC(kernel='linear', C=1)
         scores = cross_validate(clf, X, Y, cv=5, verbose=True, n_jobs=1, \

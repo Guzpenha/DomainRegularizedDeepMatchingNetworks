@@ -147,7 +147,15 @@ if __name__ == '__main__':
                 domain="MSDialog"
             return domain
 
-        df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
+
+        if ('ms_v2' in path):
+            cat_df = pd.read_csv("../data/ms_v2/ModelInput/ms_v2_categories.csv")
+            queries_to_cat = {}
+            for idx, row in cat_df.iterrows():
+                queries_to_cat[row['Q']]=row['category']            
+            df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
+        else:
+            df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
         df_tsne_map["ap"] = df_tsne_map["map"]
         df_tsne_map['lg_u_length'] = np.log(df_tsne_map.utterance_length)
         df_tsne_map[df_tsne_map['utterance_length']!=0].to_csv("tnse"+tsne_name+".csv", index=False, header=True)
