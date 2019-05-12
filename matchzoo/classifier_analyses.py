@@ -142,7 +142,7 @@ if __name__ == '__main__':
         Y = qids["labels"].values
         X = np.array(reps)
         clf = svm.SVC(kernel='linear', C=1)
-        scores = cross_validate(clf, X, Y, cv=5, verbose=True, n_jobs=-1, \
+        scores = cross_validate(clf, X, Y, cv=5, verbose=True, n_jobs=1, \
             scoring=['f1_macro','f1_micro','accuracy'])
         print('Avg accuracy: ', scores['test_accuracy'].mean())
         # print(scores['test_f1_macro'].mean())
