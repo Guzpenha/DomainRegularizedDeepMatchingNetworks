@@ -34,7 +34,7 @@ class DMN_CNN(BasicModel):
         self.embed_trainable = config['train_embed']
         self.setup(config)
         self.i = 0
-        self.l = 0
+        self.l = 1
         if not self.check():
             raise TypeError('[DMN_CNN] parameter check wrong')
         print '[DMN_CNN] init done'

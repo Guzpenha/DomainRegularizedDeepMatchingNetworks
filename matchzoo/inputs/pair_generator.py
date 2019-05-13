@@ -608,17 +608,44 @@ class DMN_PairGeneratorMultipleDomains(PairBasicGenerator):
             self.train_domain_division = size
 
         self.balanced_domain_batches = config['balanced_domain_batches']
-        if(self.balanced_domain_batches):            
+        if(self.balanced_domain_batches):
             self.d1_pair_list = []
             self.d2_pair_list = []
             for triplet in self.pair_list:
                 domain = int(triplet[0].split("Q")[1])<self.train_domain_division
+                # qid = triplet[0]
+                # dialogue_len = len(self.data1[qid])
+                # all_utt_higher = True
+                # for utt in self.data1[qid]:
+                #     if(len(utt)<30):
+                #         all_utt_higher=False                
+                # if(dialogue_len>=2 and all_utt_higher):
                 if(domain):
                     self.d1_pair_list.append(triplet)
                 else:
                     self.d2_pair_list.append(triplet)
+
+            # d1_utt_turns = {}
+            # for i in range(0,len(self.d1_pair_list),10):
+            #     qid = self.d1_pair_list[i][0]
+            #     d1_utt_turns[qid] = len(self.data1[qid])
+            # d2_utt_turns = {}
+            # for i in range(0,len(self.d2_pair_list),10):
+            #     qid = self.d2_pair_list[i][0]
+            #     d2_utt_turns[qid] = len(self.data1[qid])
+
+            # d1_utt_length = {}
+            # for i in range(0,len(self.d1_pair_list),10):
+            #     qid = self.d1_pair_list[i][0]
+            #     d1_utt_length[qid] = np.mean([len(utt) for utt in self.data1[qid]])
+            # d2_utt_length = {}
+            # for i in range(0,len(self.d2_pair_list),10):
+            #     qid = self.d2_pair_list[i][0]
+            #     d2_utt_length[qid] = np.mean([len(utt) for utt in self.data1[qid]])
+
             print('d1 pair_list size', str(len(self.d1_pair_list)))
             print('d2 pair_list size', str(len(self.d2_pair_list)))
+
         print '[DMN_PairGeneratorMultipleDomains] init done'
 
     def get_batch_static(self):
@@ -740,15 +767,24 @@ class DMN_PairGeneratorMultipleDomainsWithLabels(PairBasicGenerator):
             self.train_domain_division = size
 
         self.balanced_domain_batches = config['balanced_domain_batches'] # does not work with 3 domains and False
-        if(self.balanced_domain_batches):            
+        if(self.balanced_domain_batches):
             self.d1_pair_list = []
             self.d2_pair_list = []
             for triplet in self.pair_list:
-                domain = (int(triplet[0].split("Q")[1])<self.train_domain_division)
+                domain = int(triplet[0].split("Q")[1])<self.train_domain_division
+                # qid = triplet[0]
+                # dialogue_len = len(self.data1[qid])
+                # all_utt_higher = True
+                # for utt in self.data1[qid]:
+                #     if(len(utt)<30):
+                #         all_utt_higher=False
+                # if(dialogue_len>=2 and all_utt_higher):
                 if(domain):
                     self.d1_pair_list.append(triplet)
                 else:
                     self.d2_pair_list.append(triplet)
+            print('d1 pair_list size', str(len(self.d1_pair_list)))
+            print('d2 pair_list size', str(len(self.d2_pair_list)))
 
         if('train_clf_with_ood' in config and config['train_clf_with_ood']):            
             self.rel_ood = read_relation(filename=config['relation_file_ood'])
