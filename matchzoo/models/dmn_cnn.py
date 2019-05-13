@@ -34,7 +34,7 @@ class DMN_CNN(BasicModel):
         self.embed_trainable = config['train_embed']
         self.setup(config)
         self.i = 0
-        self.l = 1
+        self.l = K.variable(K.cast_to_floatx(1))        
         if not self.check():
             raise TypeError('[DMN_CNN] parameter check wrong')
         print '[DMN_CNN] init done'
@@ -130,7 +130,7 @@ class DMN_CNN(BasicModel):
         else: 
             flip_grad = False
 
-        Flip = GradientReversal(self.l, really_flip=flip_grad)
+        GRL = GradientReversal(hp_lambda=self.l, really_flip=flip_grad)
 
         word_embed_rep = Flatten()(concatenate(q_embeds + [d_embed]))
         word_bigru_rep = Flatten()(concatenate(q_bigru_reps + d_bigru_reps))
@@ -138,9 +138,9 @@ class DMN_CNN(BasicModel):
 
         match_representations = accum_stack_gru_hidden_flat_drop
         if 'input_to_domain_clf' in self.config and self.config['input_to_domain_clf'] == 'query_doc':
-            in_domain_clf = Flip(q_d_rep)
+            in_domain_clf = GRL(q_d_rep)
         else:
-            in_domain_clf = Flip(match_representations)
+            in_domain_clf = GRL(match_representations)
 
         # show_layer_info('in_domain_clf', in_domain_clf)
 
@@ -164,4 +164,4 @@ class DMN_CNN(BasicModel):
         #model = Model(inputs=[query, doc, dpool_index], outputs=out_)
         model = Model(inputs=[query, doc], outputs=out_)
         # print(model.summary())
-        return model, model_clf
+        return model, model_clf, self.l

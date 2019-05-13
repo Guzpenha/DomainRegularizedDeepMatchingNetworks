@@ -144,7 +144,7 @@ def train(config):
         eval_gen[tag] = generator( config = conf )
 
     ######### Load Model #########
-    model, model_clf = load_model(config)
+    model, model_clf, lambda_var = load_model(config)
     to_load_weights_file_ = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
     offset = 0
     if(os.path.isfile(to_load_weights_file_)):
@@ -211,10 +211,6 @@ def train(config):
                         correct_model = model_clf 
                     elif(tag == "train"):
                         correct_model = model
-                    p = float(i_e) / num_iters
-                    # l = 2. / (1. + np.exp(-10. * p)) - 1
-                    l = 1
-                    correct_model.l = l
                     history = correct_model.fit_generator(
                             genfun,
                             steps_per_epoch = 1,
@@ -231,11 +227,12 @@ def train(config):
                 
                 if(tag == "train_clf"):
                     correct_model = model_clf 
+                    p = float(i_e) / num_iters
+                    l = 2. / (1. + np.exp(-10. * p)) - 1
+                    # l = 1
+                    K.set_value(lambda_var, K.cast_to_floatx(l))
                 elif(tag == "train"):
                     correct_model = model
-                # p = float(i_e) / num_iters
-                # l = 2. / (1. + np.exp(-10. * p)) - 1
-                # correct_model.l = l
                 history = correct_model.fit_generator(
                         genfun,
                         steps_per_epoch = display_interval, # if display_interval = 10, then there are 10 batches in 1 epoch
@@ -382,10 +379,10 @@ def predict(config):
 
     if('random_weights_predict' in share_input_conf and share_input_conf['random_weights_predict']):
         tensorflow.set_random_seed(int(time.time()))
-        model, model_clf = load_model(config)
+        model, model_clf, _ = load_model(config)
         print("Using random weights")
     else:        
-        model, model_clf = load_model(config)
+        model, model_clf, _ = load_model(config)
         weights_file = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
         model.load_weights(weights_file)
         print ('Model loaded')
