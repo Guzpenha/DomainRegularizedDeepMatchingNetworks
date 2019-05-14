@@ -5,11 +5,11 @@ import time
 import json
 import argparse
 import random
-random.seed(49999)
+# random.seed(49999)
 import numpy
-numpy.random.seed(49999)
+# numpy.random.seed(49999)
 import tensorflow
-tensorflow.set_random_seed(49999)
+# tensorflow.set_random_seed(49999)
 
 from collections import OrderedDict
 
@@ -57,6 +57,12 @@ def train(config):
     # read input config
     input_conf = config['inputs']
     share_input_conf = input_conf['share']
+
+    if 'keras_random_seed' in share_input_conf:
+        tensorflow.set_random_seed(share_input_conf['keras_random_seed'])
+        random.seed(share_input_conf['keras_random_seed'])
+        numpy.random.seed(share_input_conf['keras_random_seed'])
+        print("Using random seed: " + str(share_input_conf['keras_random_seed']))
 
     # collect embedding
     if 'embed_path' in share_input_conf:
@@ -640,6 +646,7 @@ def main(argv):
     parser.add_argument('--train_clf_with_ood', help='use ood instances for training clf (to be used with training on both source domains)')
     parser.add_argument('--save_query_representation', help='used in predict to save the query representations either <text> or <match>')
     parser.add_argument('--random_weights_predict', help='checked only on phase predict, wheter to use random weights or not')
+    parser.add_argument('--keras_random_seed', help='the random seed to use in keras')
 
 
     args = parser.parse_args()
@@ -684,7 +691,10 @@ def main(argv):
         train_clf_with_ood = args.train_clf_with_ood
         save_query_representation = args.save_query_representation
         random_weights_predict = args.random_weights_predict
+        keras_random_seed = args.keras_random_seed
 
+        if keras_random_seed != None:
+            config['inputs']['share']['keras_random_seed'] = int(keras_random_seed)
         if random_weights_predict != None:
             config['inputs']['share']['random_weights_predict'] = random_weights_predict == 'True'
         if save_query_representation != None:
