@@ -42,6 +42,9 @@ class GradientReversal(Layer):
     def get_output_shape_for(self, input_shape):
         return input_shape
 
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
     def get_config(self):
         config = {'hp_lambda': self.hp_lambda}
         base_config = super(GradientReversal, self).get_config()
