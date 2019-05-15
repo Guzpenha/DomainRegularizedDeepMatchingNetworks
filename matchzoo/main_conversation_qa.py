@@ -196,6 +196,8 @@ def train(config):
         share_input_conf["domain_training_type"] != "DMN-MTL" and 'train_clf' in train_gen):
         del train_gen['train_clf']
 
+    if('l' in share_input_conf):
+        print("Using lambda : ", share_input_conf['l'])
     alternate_per_batch = False
     if(alternate_per_batch):
         print("training alternated batches.")
@@ -216,8 +218,10 @@ def train(config):
                     if(tag == "train_clf"):
                         correct_model = model_clf
                         p = float(i_e) / num_iters
-                        l = 2. / (1. + np.exp(-10. * p)) - 1
-                        # l = 1
+                        if('l' in share_input_conf):
+                            l = share_input_conf['l']
+                        else:
+                            l = 2. / (1. + np.exp(-10. * p)) - 1
                         K.set_value(lambda_var, K.cast_to_floatx(l))
                     elif(tag == "train"):
                         correct_model = model
@@ -238,8 +242,10 @@ def train(config):
                 if(tag == "train_clf"):
                     correct_model = model_clf 
                     p = float(i_e) / num_iters
-                    l = 2. / (1. + np.exp(-10. * p)) - 1
-                    # l = 1
+                    if('l' in share_input_conf):
+                        l = share_input_conf['l']
+                    else:
+                        l = 2. / (1. + np.exp(-10. * p)) - 1
                     K.set_value(lambda_var, K.cast_to_floatx(l))
                 elif(tag == "train"):
                     correct_model = model
@@ -265,7 +271,7 @@ def train(config):
                 #     input_v = [input_data['query'], # X
                 #               input_data['doc'],
                 #               np.array([1] * len(input_data['query'])), # sample weights
-                #               [[y] for y in y_true], # y
+                #               y_true, # y
                 #               0 # learning phase in TEST mode
                 #     ]
                 #     break
@@ -673,6 +679,7 @@ def main(argv):
     parser.add_argument('--save_query_representation', help='used in predict to save the query representations either <text> or <match>')
     parser.add_argument('--random_weights_predict', help='checked only on phase predict, wheter to use random weights or not')
     parser.add_argument('--keras_random_seed', help='the random seed to use in keras')
+    parser.add_argument('--l', help='parameter between [0,1] that controls how much to regularize DMN with MTL/ADL')
 
 
     args = parser.parse_args()
@@ -718,7 +725,10 @@ def main(argv):
         save_query_representation = args.save_query_representation
         random_weights_predict = args.random_weights_predict
         keras_random_seed = args.keras_random_seed
+        l = args.l
 
+        if l != None:
+            config['inputs']['share']['l'] = float(l)
         if keras_random_seed != None:
             config['inputs']['share']['keras_random_seed'] = int(keras_random_seed)
         if random_weights_predict != None:
