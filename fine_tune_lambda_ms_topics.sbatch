@@ -15,7 +15,7 @@ module load cuda/10.0 cudnn/10.0-7.4.2.24
 cd matchzoo
 
 
-NUM_ITERS=50
+NUM_ITERS=100
 RESET_CLF_WEIGHTS=1000 #no resetting
 CATEGORY='MSN'
 for RANDOM_SEED in 10 100 1000
