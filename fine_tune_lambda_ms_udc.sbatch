@@ -34,7 +34,7 @@ do
 			#--------------------------------#
 
 
-			srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF --keras_random_seed $RANDOM_SEED --lambda $LAMBDA
+			srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF --keras_random_seed $RANDOM_SEED --l $LAMBDA
 			srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 1${NUM_ITERS}22222 --predict_ood False --statistical_test 't-test'
 			 
 		done
@@ -52,7 +52,7 @@ do
 			#       Train on UDC             #
 			#--------------------------------#
 
-			srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --input_to_domain_clf $INPUT_TO_CLF  --keras_random_seed $RANDOM_SEED --lambda $LAMBDA
+			srun python main_conversation_qa.py --phase train --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --domain_to_train 1 --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --input_to_domain_clf $INPUT_TO_CLF  --keras_random_seed $RANDOM_SEED --l $LAMBDA
 			srun python main_conversation_qa.py --phase predict --model_file config/ms_udc/dmn_cnn_ms_udc.config --or_cmd True --test_weights_iters 2${NUM_ITERS}22222 --predict_ood False --statistical_test 't-test'
 		done
 	done
