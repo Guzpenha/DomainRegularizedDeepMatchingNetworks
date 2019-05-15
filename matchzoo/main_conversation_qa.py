@@ -214,7 +214,11 @@ def train(config):
                     # print '[%s]\t[Train:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
                     print('Train '+tag)
                     if(tag == "train_clf"):
-                        correct_model = model_clf 
+                        correct_model = model_clf
+                        p = float(i_e) / num_iters
+                        l = 2. / (1. + np.exp(-10. * p)) - 1
+                        # l = 1
+                        K.set_value(lambda_var, K.cast_to_floatx(l))
                     elif(tag == "train"):
                         correct_model = model
                     history = correct_model.fit_generator(
@@ -230,7 +234,7 @@ def train(config):
             for tag, generator in train_gen.items():
                 genfun = generator.get_batch_generator()
                 print '[%s]\t[Train:%s]' % (time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(time.time())), tag),
-                
+
                 if(tag == "train_clf"):
                     correct_model = model_clf 
                     p = float(i_e) / num_iters
@@ -244,8 +248,30 @@ def train(config):
                         steps_per_epoch = display_interval, # if display_interval = 10, then there are 10 batches in 1 epoch
                         epochs = 1,
                         shuffle=False,
-                        verbose = 0
-                    ) #callbacks=[eval_map])
+                        verbose = 0)
+
+                # weights = model_clf.trainable_weights
+                # gradients = model_clf.optimizer.get_gradients(model_clf.total_loss, weights) # gradient tensors
+
+                # input_tensors = [model_clf.input[0], # input data
+                #  model_clf.input[1], # input data
+                #  model_clf.sample_weights[0], # how much to weight each sample by
+                #  model_clf.targets[0], # labels
+                #  K.learning_phase(), # train or test mode
+                # ]
+                # from keras.utils.np_utils import to_categorical
+                # for input_data, y_true in genfun:
+                #     get_gradients = K.function(inputs=input_tensors, outputs=gradients[-8:])
+                #     input_v = [input_data['query'], # X
+                #               input_data['doc'],
+                #               np.array([1] * len(input_data['query'])), # sample weights
+                #               [[y] for y in y_true], # y
+                #               0 # learning phase in TEST mode
+                #     ]
+                #     break
+                # results = zip(weights, get_gradients(input_v))
+                # from IPython import embed
+                # embed()
                 print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])
 
         for tag, generator in eval_gen.items():

@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     prepare = Preparation()
 
-    if data_name == 'udc' or data_name == 'ms_v2':
+    if data_name == 'udc' or data_name == 'ms_v2' or data_name =='mantis':
         train_file = 'train.txt'
         valid_file = 'valid.txt'
         test_file = 'test.txt'
