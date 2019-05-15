@@ -554,7 +554,7 @@ def predict(config):
 
         generator.reset()
 
-
+        pvalue_sufix=""
         if(save_query_representation):
             with open(config['global']['representations_save_path']+'q_rep.pickle', 'wb') as handle:
                 pickle.dump(utterances_w_emb, handle, protocol=pickle.HIGHEST_PROTOCOL)
