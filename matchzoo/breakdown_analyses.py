@@ -113,7 +113,7 @@ if __name__ == '__main__':
             else:
                 rep = utterances_w_emb[k][rep_used].flatten().tolist()
 
-            reps.append(rep)
+            reps.append(rep[0:60])
             qids.append(k)
         print("each utterance has " + str(len(rep))+" dimensions")
         del(utterances_w_emb)
@@ -145,8 +145,7 @@ if __name__ == '__main__':
             #     domain="UDC"
             # else:
             #     domain="MSDialog"
-            # return domain
-
+            return domain        
 
         if ('ms_v2' in path):
             cat_df = pd.read_csv("../data/ms_v2/ModelInput/ms_v2_categories.csv")
@@ -156,11 +155,12 @@ if __name__ == '__main__':
             df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
         else:
             df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
+        # embed()
         df_tsne_map["ap"] = df_tsne_map["map"]
         df_tsne_map['lg_u_length'] = np.log(df_tsne_map.utterance_length)
         df_tsne_map[df_tsne_map['utterance_length']!=0].to_csv("tnse"+tsne_name+".csv", index=False, header=True)
         exit()
-        embed()
+        # embed()
         flatten_rep = np.matrix(flatten_rep)
         for i in range(0, flatten_rep.shape[1], flatten_rep.shape[1]/10):
             turn_rep = flatten_rep[:,i:i+flatten_rep.shape[1]/10]
