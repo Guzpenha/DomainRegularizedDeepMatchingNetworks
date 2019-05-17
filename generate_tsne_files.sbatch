@@ -63,7 +63,6 @@ DOMAIN_2=apple
 
 TRAINING_TYPE='None'
 #random weights
-srun python main_conversation_qa.py --phase train --model_file config/${DOMAIN_1}_${DOMAIN_2}/dmn_cnn_${DOMAIN_1}_${DOMAIN_2}.config --or_cmd True --predict False
 srun python main_conversation_qa.py --phase predict --model_file config/${DOMAIN_1}_${DOMAIN_2}/dmn_cnn_${DOMAIN_1}_${DOMAIN_2}.config --or_cmd True --random_weights_predict True --predict_ood False --save_query_representation text
 cat ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt
 srun python breakdown_analyses.py ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelInput/dmn_model_input/ _dmn_random_textual turn_1
@@ -89,7 +88,6 @@ srun python classifier_analyses.py ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/Model
 
 TRAINING_TYPE='None'
 #random weights
-srun python main_conversation_qa.py --phase train --model_file config/${DOMAIN_1}_${DOMAIN_2}/dmn_cnn_${DOMAIN_1}_${DOMAIN_2}.config --or_cmd True --predict False
 srun python main_conversation_qa.py --phase predict --model_file config/${DOMAIN_1}_${DOMAIN_2}/dmn_cnn_${DOMAIN_1}_${DOMAIN_2}.config --or_cmd True --random_weights_predict True --predict_ood False --save_query_representation sentence
 cat ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt
 srun python breakdown_analyses.py ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_1}_${DOMAIN_2}/ModelInput/dmn_model_input/ _dmn_random_sentence turn_1
