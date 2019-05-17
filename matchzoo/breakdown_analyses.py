@@ -132,20 +132,20 @@ if __name__ == '__main__':
         def get_domain_from_query(r):
             num = int(r["Q"].split("Q")[1])
 
-            # if( num > 9900000):
-            #     domain="UDC"
-            # elif(num > 46774):
-            #     domain="Apple"
-            # else:
-            #     domain="MSDialog"
-            # ms->udc
             if( num > 9900000):
-                domain="Apple"
-            elif(num > 574593):
                 domain="UDC"
+            elif(num > 46774):
+                domain="Apple"
             else:
                 domain="MSDialog"
-            return domain
+            # ms->udc
+            # if( num > 9900000):
+            #     domain="Apple"
+            # elif(num > 574593):
+            #     domain="UDC"
+            # else:
+            #     domain="MSDialog"
+            # return domain
 
 
         if ('ms_v2' in path):

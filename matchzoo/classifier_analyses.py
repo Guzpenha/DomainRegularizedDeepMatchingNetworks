@@ -66,20 +66,20 @@ def read_embedding(filename):
 def get_domain_from_query(r):
     num = int(r["Q"].split("Q")[1])
 
-    # if( num > 9900000):
-    #     domain="UDC"
-    # elif(num > 46774):
-    #     domain="Apple"
-    # else:
-    #     domain="MSDialog"
-    # ms->udc
     if( num > 9900000):
-        domain="Apple"
-    elif(num > 574593):
         domain="UDC"
+    elif(num > 46774):
+        domain="Apple"
     else:
         domain="MSDialog"
-    return domain
+    # # ms->udc
+    # if( num > 9900000):
+    #     domain="Apple"
+    # elif(num > 574593):
+    #     domain="UDC"
+    # else:
+    #     domain="MSDialog"
+    # return domain
 
 # python breakdown_analyses.py dmn_cnn.predict_ms.test.txtpredict_in /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/udc/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelInput/dmn_model_input/
 # python breakdown_analyses.py /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelRes/dmn_cnn.predict_ms_and_udc.test.txt /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_v2/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/udc/ModelInput/dmn_model_input/ /Users/gustavopenha/phd/emnlp19/NeuralResponseRanking/data/ms_udc/ModelInput/dmn_model_input/
