@@ -13,6 +13,7 @@ from pprint import pprint
 from sklearn import svm
 from sklearn.model_selection import cross_validate
 from sklearn import preprocessing
+from sklearn.ensemble import RandomForestClassifier
 def calculate_map(r):
     def map(y_true, y_pred, rel_threshold=0):
         s = 0.
@@ -153,7 +154,8 @@ if __name__ == '__main__':
             qids["labels"] = qids.apply(lambda r: int(r['domain'] == 'MSDialog'), axis=1)
             Y = qids["labels"].values
         X = np.array(reps)
-        clf = svm.SVC(kernel='linear', C=1)
+        # clf = svm.SVC(kernel='linear', C=1)
+        clf = RandomForestClassifier(n_estimators=100, max_depth=5)
         scores = cross_validate(clf, X, Y, cv=5, verbose=True, n_jobs=1, \
             scoring=['f1_macro','f1_micro','accuracy'])
         print('Avg accuracy: ', scores['test_accuracy'].mean())
