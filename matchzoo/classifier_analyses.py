@@ -148,6 +148,14 @@ if __name__ == '__main__':
             qids["domain"] = qids.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
             le = preprocessing.LabelEncoder()
             Y=le.fit_transform(qids["domain"].values)
+        elif ('mantis' in path):
+            cat_df = pd.read_csv("../data/mantis/ModelInput/mantis_categories.csv")
+            queries_to_cat = {}
+            for idx, row in cat_df.iterrows():
+                queries_to_cat[row['Q']]=row['category']            
+            qids["domain"] = qids.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
+            le = preprocessing.LabelEncoder()
+            Y=le.fit_transform(qids["domain"].values)
         else:
             get_domain = get_domain_from_query
             qids["domain"] = qids.apply(lambda r, f = get_domain: f(r), axis=1)

@@ -113,7 +113,7 @@ if __name__ == '__main__':
             else:
                 rep = utterances_w_emb[k][rep_used].flatten().tolist()
 
-            reps.append(rep[0:60])
+            reps.append(rep)
             qids.append(k)
         print("each utterance has " + str(len(rep))+" dimensions")
         del(utterances_w_emb)
@@ -153,6 +153,14 @@ if __name__ == '__main__':
             for idx, row in cat_df.iterrows():
                 queries_to_cat[row['Q']]=row['category']            
             df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
+        elif ('mantis' in path):
+            cat_df = pd.read_csv("../data/mantis/ModelInput/mantis_categories.csv")
+            queries_to_cat = {}
+            for idx, row in cat_df.iterrows():
+                queries_to_cat[row['Q']]=row['category']            
+            qids["domain"] = qids.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
+            le = preprocessing.LabelEncoder()
+            Y=le.fit_transform(qids["domain"].values)        
         else:
             df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
         # embed()

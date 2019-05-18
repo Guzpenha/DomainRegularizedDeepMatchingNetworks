@@ -1,8 +1,8 @@
 #!/bin/sh
 
 #SBATCH --partition=general
-#SBATCH --qos=long
-#SBATCH --time=12:00:00
+#SBATCH --qos=short
+#SBATCH --time=04:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --gres=gpu:1
@@ -30,36 +30,44 @@ DOMAIN_2=out
 # srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_random match_rep
 
 TRAINING_TYPE='None'
-srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0
-srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters ${NUM_ITERS} --predict_ood False --save_query_representation match
+# srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0
+srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters ${NUM_ITERS} --predict_ood False --save_query_representation text
 
 cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt
-cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt_dmn_${DOMAIN_1}_match_rep
-cp ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle_dmn_${DOMAIN_1}_match_rep
-srun python breakdown_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}  match_rep
-srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}  match_rep
+cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt_dmn_${DOMAIN_1}_textual_rep
+cp ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle_dmn_${DOMAIN_1}_textual_rep
+srun python breakdown_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_textual  turn_1
+srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_textual  turn_1
 
-TRAINING_TYPE='DMN-ADL'
-INPUT_TO_CLF='match'
-srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF
-srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 1${NUM_ITERS}11111 --predict_ood False --save_query_representation match
+TRAINING_TYPE='None'
+# srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0
+srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters ${NUM_ITERS} --predict_ood False --save_query_representation sentence
 
 cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt
-cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt_dmn_adl_match_rep
-cp ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle_dmn_adl_match_rep
-srun python breakdown_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_adl  match_rep
-srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_adl  match_rep
+cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt_dmn_${DOMAIN_1}_sentence_rep
+cp ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle_dmn_${DOMAIN_1}_textual_rep
+srun python breakdown_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_sentence  turn_1
+srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_sentence  turn_1
+
 
 TRAINING_TYPE='DMN-MTL'
-INPUT_TO_CLF='match'
-srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF
-srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 2${NUM_ITERS}11111 --predict_ood False --save_query_representation match
+INPUT_TO_CLF='query_doc'
+# srun python main_conversation_qa.py --phase train --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF
+srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 2${NUM_ITERS}11111 --predict_ood False --save_query_representation text
 
 cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt
-cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt_dmn_mtl_match_rep
+cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt_dmn_mtl_textual_rep
 cp ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle_dmn_mtl_match_rep
-srun python breakdown_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_mtl  match_rep
-srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_mtl  match_rep
+srun python breakdown_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_mtl_textual  turn_1
+srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_mtl_textual  turn_1
+
+srun python main_conversation_qa.py --phase predict --model_file config/ms_v2/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 2${NUM_ITERS}11111 --predict_ood False --save_query_representation sentence
+
+cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt
+cat ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}.test.txt ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_2}.test.txt > ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt_dmn_mtl_sentence_rep
+cp ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle ${BASE_DIR}data/ms_v2/ModelRes/q_rep.pickle_dmn_mtl_match_rep
+srun python breakdown_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_mtl_sentence  turn_1
+srun python classifier_analyses.py ${BASE_DIR}data/ms_v2/ModelRes/dmn_cnn.predict_${DOMAIN_1}_and_${DOMAIN_2}.test.txt ${BASE_DIR}data/${DOMAIN_1}_v2/ModelInput/dmn_model_input/ ${BASE_DIR}data/${DOMAIN_2}/ModelInput/dmn_model_input/ ${BASE_DIR}data/ms_v2/ModelInput/dmn_model_input/ _dmn_${DOMAIN_1}_mtl_sentence  turn_1
 
 # for INPUT_TO_CLF in 'query_doc' 'match'
 # do
