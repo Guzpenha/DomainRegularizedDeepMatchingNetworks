@@ -158,9 +158,7 @@ if __name__ == '__main__':
             queries_to_cat = {}
             for idx, row in cat_df.iterrows():
                 queries_to_cat[row['Q']]=row['category']            
-            qids["domain"] = qids.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)
-            le = preprocessing.LabelEncoder()
-            Y=le.fit_transform(qids["domain"].values)        
+            df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = queries_to_cat: f[r["Q"]], axis=1)  
         else:
             df_tsne_map["domain"] = df_tsne_map.apply(lambda r, f = get_domain_from_query: f(r), axis=1)
         # embed()
