@@ -37,11 +37,19 @@ if __name__ == '__main__':
 
     prepare = Preparation()
 
-    if data_name == 'udc' or data_name == 'ms_v2' or data_name =='mantis' or data_name=='mantis_50':
+    if data_name == 'udc' or data_name == 'ms_v2' or data_name =='mantis':
         train_file = 'train.txt'
         valid_file = 'valid.txt'
         test_file = 'test.txt'
     elif data_name == 'apple':
+        train_file = 'data_train.tsv'
+        valid_file = 'data_dev.tsv'
+        test_file = 'data_test.tsv'
+    elif data_name == 'mantis_10':
+        train_file = 'data_train_easy.tsv'
+        valid_file = 'data_dev_easy.tsv'
+        test_file = 'data_test_easy.tsv'
+    elif data_name == 'mantis_50':
         train_file = 'data_train.tsv'
         valid_file = 'data_dev.tsv'
         test_file = 'data_test.tsv'        

@@ -8,12 +8,12 @@ import os
 import sys
 
 if __name__ == '__main__':
-    word2vec_path = '../../data/udc/ModelInput/word2vec_mikolov/word2vec/bin/'
 
     if len(sys.argv) < 4:
         print 'please input params: data_name, is_read_vocab (0 or 1), model_input_folder (e.g. current_dir or dmn_prf_model_input_body or dmn_model_input )'
         exit(1)
     data_name = sys.argv[1]  # ms or udc or ms_v2
+    word2vec_path = '../../data/'+data_name+'/ModelInput/word2vec_mikolov/word2vec/bin/'
     is_read_vocab = sys.argv[2] # 0 for no read; 1 for read; default is 0
     model_input_folder = sys.argv[3] # model_input_folder (e.g. dmn_prf_model_input_body)
     #wd = sys.argv[4] # size of word embeddings.
