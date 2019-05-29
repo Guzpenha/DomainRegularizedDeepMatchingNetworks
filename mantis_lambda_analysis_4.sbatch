@@ -16,7 +16,7 @@ cd matchzoo
 
 
 INPUT_TO_CLF='query_doc'
-CATEGORY='dba'
+CATEGORY='askubuntu'
 NUM_ITERS=100
 RESET_CLF_WEIGHTS=1000 #no resetting
 
