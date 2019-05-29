@@ -2,7 +2,7 @@
 
 #SBATCH --partition=general
 #SBATCH --qos=long
-#SBATCH --time=24:00:00
+#SBATCH --time=40:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --gres=gpu:1
@@ -20,9 +20,9 @@ CATEGORY='dba'
 NUM_ITERS=100
 RESET_CLF_WEIGHTS=1000 #no resetting
 
-for LAMBDA in 0.01 0.05 0.10 0.15 0.20
+for LAMBDA in 0.00 0.05 0.10 0.15 0.20
 do
-	for RANDOM_SEED in 10 100 1000 10000 100000
+	for RANDOM_SEED in 10 100 1000 10000 100000 11 101 1001 10001 100001
 	do
 		#========================================#
 		#               DMN-ADL                  #
