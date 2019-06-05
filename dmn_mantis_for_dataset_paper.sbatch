@@ -18,10 +18,20 @@ cd matchzoo
 NUM_ITERS=100
 
 #========================================#
-#               DMN                      #
+#              mantis_10                 #
+#========================================#
+# for RANDOM_SEED in 10 100 1000 10000 100000
+# do
+# 	srun python main_conversation_qa.py --phase train --model_file config/mantis_10/dmn_cnn.config --or_cmd True --num_iters ${NUM_ITERS} --predict False --keras_random_seed ${RANDOM_SEED}
+# 	srun python main_conversation_qa.py --phase predict --model_file config/mantis_10/dmn_cnn.config --or_cmd True --test_weights_iters ${NUM_ITERS} --predict_ood False
+# done
+
+
+#========================================#
+#               mantis_50                #
 #========================================#
 for RANDOM_SEED in 10 100 1000 10000 100000
 do
-	srun python main_conversation_qa.py --phase train --model_file config/mantis_10/dmn_cnn.config --or_cmd True --num_iters ${NUM_ITERS} --predict False --keras_random_seed ${RANDOM_SEED}
-	srun python main_conversation_qa.py --phase predict --model_file config/mantis_10/dmn_cnn.config --or_cmd True --test_weights_iters ${NUM_ITERS} --predict_ood True
+	srun python main_conversation_qa.py --phase train --model_file config/mantis_50/dmn_cnn.config --or_cmd True --num_iters ${NUM_ITERS} --predict False --keras_random_seed ${RANDOM_SEED}
+	srun python main_conversation_qa.py --phase predict --model_file config/mantis_50/dmn_cnn.config --or_cmd True --test_weights_iters ${NUM_ITERS} --predict_ood False
 done
