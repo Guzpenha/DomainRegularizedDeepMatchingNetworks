@@ -15,7 +15,7 @@ module load cuda/10.0 cudnn/10.0-7.4.2.24
 cd matchzoo
 
 
-NUM_ITERS=100
+NUM_ITERS=500
 
 #========================================#
 #              mantis_10                 #
