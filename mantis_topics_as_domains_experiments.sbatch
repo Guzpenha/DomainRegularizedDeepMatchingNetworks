@@ -17,7 +17,7 @@ cd matchzoo
 
 NUM_ITERS=100
 RESET_CLF_WEIGHTS=1000 #no resetting
-for RANDOM_SEED in 100 1000 10000 100000
+for RANDOM_SEED in 10 100 1000 10000 100000
 do
 	for CATEGORY in 'worldbuilding' 'apple' 'diy' 'scifi' 'electronics' 'dba' 'physics' 'english' 'security' 'gaming' 'gis' 'askubuntu' 'travel' 'stats'
 	do

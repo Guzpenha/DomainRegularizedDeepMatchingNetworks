@@ -52,7 +52,11 @@ if __name__ == '__main__':
     elif data_name == 'mantis_50':
         train_file = 'data_train.tsv'
         valid_file = 'data_dev.tsv'
-        test_file = 'data_test.tsv'        
+        test_file = 'data_test.tsv'
+    elif data_name == 'L4':
+        train_file = 'train.tsv'
+        valid_file = 'dev.tsv'
+        test_file = 'test.tsv'
     else:
         raise ValueError('invalid data name!')
 
