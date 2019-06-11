@@ -16,6 +16,7 @@ from pair_generator import DMN_PairGeneratorMultipleDomains
 from pair_generator import DMN_PairGeneratorMultipleDomainsWithLabels
 from pair_generator import DMN_PairGeneratorTopicDomainsWithLabels
 from pair_generator import DMN_PairGeneratorFilterTargetTopic
+from pair_generator import DMN_PairGeneratorFilterMultipleTargetTopic
 
 from list_generator import ListGenerator
 from list_generator import Triletter_ListGenerator
@@ -26,6 +27,7 @@ from list_generator import DMN_ListGenerator_OOD
 from list_generator import DMN_KD_ListGenerator
 from list_generator import DMN_ListGeneratorByDomain
 from list_generator import DMN_ListGeneratorByTopicAsDomain
+from list_generator import DMN_ListGeneratorByMultipleTopicAsDomain
 
 def serialize(generator):
     return generator.__name__

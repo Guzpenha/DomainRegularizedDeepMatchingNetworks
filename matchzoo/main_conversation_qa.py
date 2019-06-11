@@ -680,6 +680,7 @@ def main(argv):
     parser.add_argument('--random_weights_predict', help='checked only on phase predict, wheter to use random weights or not')
     parser.add_argument('--keras_random_seed', help='the random seed to use in keras')
     parser.add_argument('--l', help='parameter between [0,1] that controls how much to regularize DMN with MTL/ADL')
+    parser.add_argument('--test_categories', help='categories to filter for target domain, separated by ,')
 
 
     args = parser.parse_args()
@@ -726,7 +727,10 @@ def main(argv):
         random_weights_predict = args.random_weights_predict
         keras_random_seed = args.keras_random_seed
         l = args.l
+        test_categories = args.test_categories
 
+        if test_categories != None:
+            config['inputs']['share']['test_categories'] = test_categories
         if l != None:
             config['inputs']['share']['l'] = float(l)
         if keras_random_seed != None:

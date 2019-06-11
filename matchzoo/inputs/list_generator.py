@@ -762,6 +762,105 @@ class DMN_ListGeneratorByDomain(ListBasicGenerator):
             else:
                 yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len, 'ID': ID_pairs, 'list_counts': list_counts}, Y)
 
+class DMN_ListGeneratorByMultipleTopicAsDomain(ListTopicsGenerator):
+    def __init__(self, config={}):
+        super(DMN_ListGeneratorByMultipleTopicAsDomain, self).__init__(config=config)
+        self.data1 = config['data1']
+        self.data2 = config['data2']
+        self.data1_maxlen = config['text1_maxlen']
+        self.data1_max_utt_num = int(config['text1_max_utt_num'])
+        self.data2_maxlen = config['text2_maxlen']
+        self.fill_word = config['vocab_size'] - 1
+        self.embed = config['embed']
+        self.check_list.extend(['data1', 'data2', 'text1_maxlen', 'text2_maxlen', 'embed', 'text1_max_utt_num'])
+        if not self.check():
+            raise TypeError('[DMN_ListGeneratorByMultipleTopicAsDomain] parameter check wrong.')
+        print '[DMN_ListGeneratorByMultipleTopicAsDomain] init done, list number: %d. ' % (self.num_list)
+
+        cat_df = pd.read_csv(config['query_to_category_file'])
+        self.queries_to_cat = {}
+        self.cat_to_filter = config['test_categories'].split(",")
+        for idx, row in cat_df.iterrows():
+            self.queries_to_cat[row['Q']]=row['category']
+
+        self.d1_list_list = []
+        self.d2_list_list = []
+        for l in self.list_list:
+            domain = self.queries_to_cat[l[0]]
+            if(domain in self.cat_to_filter):
+                self.d2_list_list.append(l)
+            else:
+                self.d1_list_list.append(l)
+        for l in self.list_list_train:
+            domain = self.queries_to_cat[l[0]]
+            if(domain in self.cat_to_filter):
+                self.d2_list_list.append(l)
+        print('test category', self.cat_to_filter)
+        print('d1 list_list size', str(len(self.d1_list_list)))
+        print('d2 list_list size', str(len(self.d2_list_list)))
+
+        if(config['domain'] == 0):
+            self.list_list = self.d1_list_list
+            self.num_list = len(self.list_list)
+        else:
+            self.list_list = self.d2_list_list
+            self.num_list = len(self.list_list)
+
+    def get_batch(self):
+        while self.point < self.num_list:
+            currbatch = []
+            if self.point + self.batch_list <= self.num_list:
+                currbatch = self.list_list[self.point: self.point+self.batch_list]
+                self.point += self.batch_list
+            else:
+                currbatch = self.list_list[self.point:]
+                self.point = self.num_list
+
+            bsize = sum([len(pt[1]) for pt in currbatch]) # 50 * 10 = 500
+            #print ('test bsize: ', bsize)
+            ID_pairs = []
+            list_count = [0]
+            X1 = np.zeros((bsize, self.data1_max_utt_num, self.data1_maxlen), dtype=np.int32)
+            X1_len = np.zeros((bsize, self.data1_max_utt_num), dtype=np.int32)
+            X2 = np.zeros((bsize, self.data2_maxlen), dtype=np.int32)
+            X2_len = np.zeros((bsize,), dtype=np.int32)
+            Y = np.zeros((bsize,), dtype= np.int32)
+            X1[:] = self.fill_word
+            X2[:] = self.fill_word
+            j = 0
+            #print ('test currbatch: ', currbatch)
+            #print ('test len(currbatch): ', len(currbatch))
+            for pt in currbatch: # 50
+                d1, d2_list = pt[0], pt[1]
+                #print('test d1 d2_list', d1, d2_list)
+                list_count.append(list_count[-1] + len(d2_list))
+                for l, d2 in d2_list: # 10
+                    # if len(self.data1[d1]) > 10, we only keep the most recent 10 utterances
+                    utt_start = 0 if len(self.data1[d1]) < self.data1_max_utt_num else (
+                    len(self.data1[d1]) - self.data1_max_utt_num)
+                    for z in range(utt_start,len(self.data1[d1])):
+                        d1_ws = self.data1[d1][z].split()
+                        d1_len = min(self.data1_maxlen, len(d1_ws))
+                        X1[j, z-utt_start, :d1_len], X1_len[j, z-utt_start] = d1_ws[:d1_len], d1_len
+                    #print ("l d2: ", l, d2)
+                    if len(self.data2[d2]) == 0:
+                        d2_ws = [self.fill_word]
+                    else:
+                        d2_ws = self.data2[d2][0].split()
+                    d2_len = min(self.data2_maxlen, len(d2_ws))
+                    X2[j, :d2_len], X2_len[j] = d2_ws[:d2_len], d2_len
+                    ID_pairs.append((d1, d2))
+                    Y[j] = l
+                    j += 1
+            yield X1, X1_len, X2, X2_len, Y, ID_pairs, list_count
+
+    def get_batch_generator(self):
+        for X1, X1_len, X2, X2_len, Y, ID_pairs, list_counts in self.get_batch():
+            if self.config['use_dpool']:
+                yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len, 'dpool_index': DynamicMaxPooling.dynamic_pooling_index(X1_len, X2_len, self.config['text1_maxlen'], self.config['text2_maxlen']), 'ID': ID_pairs, 'list_counts': list_counts}, Y)
+            else:
+                yield ({'query': X1, 'query_len': X1_len, 'doc': X2, 'doc_len': X2_len, 'ID': ID_pairs, 'list_counts': list_counts}, Y)
+
 class DMN_ListGeneratorByTopicAsDomain(ListTopicsGenerator):
     def __init__(self, config={}):
         super(DMN_ListGeneratorByTopicAsDomain, self).__init__(config=config)
