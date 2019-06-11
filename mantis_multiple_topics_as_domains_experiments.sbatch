@@ -36,8 +36,8 @@ do
 			#========================================#
 
 			TRAINING_TYPE='DMN-ADL'
-			srun python main_conversation_qa.py --phase train --model_file config//dmn_cnn_N_topics_as_domains.config --or_cmd True --test_categories $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF --keras_random_seed $RANDOM_SEED
-			srun python main_conversation_qa.py --phase predict --model_file config/manmantistis/dmn_cnn_N_topics_as_domains.config --or_cmd True --test_categories $CATEGORY --test_weights_iters 1${NUM_ITERS}11111 --predict_ood False
+			srun python main_conversation_qa.py --phase train --model_file config/mantis/dmn_cnn_N_topics_as_domains.config --or_cmd True --test_categories $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF --keras_random_seed $RANDOM_SEED
+			srun python main_conversation_qa.py --phase predict --model_file config/mantis/dmn_cnn_N_topics_as_domains.config --or_cmd True --test_categories $CATEGORY --test_weights_iters 1${NUM_ITERS}11111 --predict_ood False
 
 			#========================================#
 			#               DMN-MTL                  #
