@@ -15,7 +15,7 @@ module load cuda/10.0 cudnn/10.0-7.4.2.24
 cd matchzoo
 
 
-NUM_ITERS=500
+NUM_ITERS=100
 RESET_CLF_WEIGHTS=1000 #no resetting
 for RANDOM_SEED in 10 100 1000 10000 100000
 do
