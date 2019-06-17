@@ -19,7 +19,7 @@ NUM_ITERS=100
 RESET_CLF_WEIGHTS=1000 #no resetting
 for RANDOM_SEED in 10 100 1000 10000 100000
 do
-	for CATEGORY in 'Home & Garden' 'Sports' 'Politics & Government' 'Travel' #'Pregnancy & Parenting' 'Travel' 'Science & Mathematics' 'Home & Garden' 'Education & Reference' 'Business & Finance' 'Food & Drink' 'Cars & Transportation' 'Politics & Government' 'Games & Recreation' 'Society & Culture' 'Family & Relationships' 'Entertainment & Music' 'Sports' 'Consumer Electronics' 'Health' 'Pets' 'News & Events' 'Arts & Humanities' 'Dining Out' 'Social Science' 'Beauty & Style' 'undefined' 'Local Businesses' 'Environment' 'Asia Pacific' 'Societ\xc3\xa0 e culture'
+	for CATEGORY in "Home & Garden" "Sports" "Politics & Government" "Travel" #"Pregnancy & Parenting" "Travel" "Science & Mathematics" "Home & Garden" "Education & Reference" "Business & Finance" "Food & Drink" "Cars & Transportation" "Politics & Government" "Games & Recreation" "Society & Culture" "Family & Relationships" "Entertainment & Music" "Sports" "Consumer Electronics" "Health" "Pets" "News & Events" "Arts & Humanities" "Dining Out" "Social Science" "Beauty & Style" "undefined" "Local Businesses" "Environment" "Asia Pacific" "Societ\xc3\xa0 e culture"
 	do
 		#========================================#
 		#               DMN                      #
