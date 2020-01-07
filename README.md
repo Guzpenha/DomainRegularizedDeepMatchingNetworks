@@ -4,3 +4,10 @@ This repo contains the implementation of two regularization techniques for Deep 
 
 ![Image Title](./img/DomainAdversarialLearning_DMN.png)
 
+To enable MTL or DAL use the following parameter with either 'DMN-ADL' or 'DMN-MTL'as input :
+
+```
+ python main_conversation_qa.py --domain_training_type '$REGULARIZATION'
+```
+
+To see some examples and run the code you can also use this [google colab notebook](https://colab.research.google.com/drive/1BLUFYpNY5_tcyVx0EdEfzpJfoooErZz1) that clones the repo, downloads the dataset and run experiments.
