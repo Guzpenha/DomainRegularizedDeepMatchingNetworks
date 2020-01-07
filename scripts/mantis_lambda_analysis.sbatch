@@ -20,7 +20,7 @@ CATEGORY='askubuntu'
 NUM_ITERS=100
 RESET_CLF_WEIGHTS=1000 #no resetting
 
-for LAMBDA in 0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0
+for LAMBDA in 10 10000 10000000 10000000000 #0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0
 do
 	for RANDOM_SEED in 10 100 1000 10000 100000
 	do
@@ -32,6 +32,13 @@ do
 		srun python main_conversation_qa.py --phase train --model_file config/mantis/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --domain_training_type $TRAINING_TYPE --num_iters ${NUM_ITERS} --predict False --domain_to_train 0 --reset_clf_weights_iters $RESET_CLF_WEIGHTS --input_to_domain_clf $INPUT_TO_CLF --keras_random_seed $RANDOM_SEED --l $LAMBDA
 		srun python main_conversation_qa.py --phase predict --model_file config/mantis/dmn_cnn_topics_as_domains.config --or_cmd True --test_category $CATEGORY --test_weights_iters 1${NUM_ITERS}11111 --predict_ood False
 
+	done
+done
+
+for LAMBDA in 10 10000 10000000 10000000000 #0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.0
+do
+	for RANDOM_SEED in 10 100 1000 10000 100000
+	do
 		#========================================#
 		#               DMN-MTL                  #
 		#========================================#

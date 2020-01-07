@@ -153,10 +153,10 @@ def train(config):
     model, model_clf, lambda_var = load_model(config)
     to_load_weights_file_ = str(global_conf['weights_file']) + '.' + str(global_conf['test_weights_iters'])
     offset = 0
-    if(os.path.isfile(to_load_weights_file_)):
-        print "loading weights from file "+to_load_weights_file_
-        model.load_weights(to_load_weights_file_)
-        offset=global_conf['test_weights_iters']
+    # if(os.path.isfile(to_load_weights_file_)):
+    #     print "loading weights from file "+to_load_weights_file_
+    #     model.load_weights(to_load_weights_file_)
+    #     offset=global_conf['test_weights_iters']
 
     loss = []
     for lobj in config['losses']:
@@ -256,28 +256,29 @@ def train(config):
                         shuffle=False,
                         verbose = 0)
 
-                # weights = model_clf.trainable_weights
-                # gradients = model_clf.optimizer.get_gradients(model_clf.total_loss, weights) # gradient tensors
+                # if(tag == "train_clf"):
+                #     from IPython import embed
+                #     embed()
+                #     weights = model_clf.trainable_weights
+                #     gradients = model_clf.optimizer.get_gradients(model_clf.total_loss, weights) # gradient tensors
 
-                # input_tensors = [model_clf.input[0], # input data
-                #  model_clf.input[1], # input data
-                #  model_clf.sample_weights[0], # how much to weight each sample by
-                #  model_clf.targets[0], # labels
-                #  K.learning_phase(), # train or test mode
-                # ]
-                # from keras.utils.np_utils import to_categorical
-                # for input_data, y_true in genfun:
-                #     get_gradients = K.function(inputs=input_tensors, outputs=gradients[-8:])
-                #     input_v = [input_data['query'], # X
-                #               input_data['doc'],
-                #               np.array([1] * len(input_data['query'])), # sample weights
-                #               y_true, # y
-                #               0 # learning phase in TEST mode
+                #     input_tensors = [model_clf.input[0], # input data
+                #      model_clf.input[1], # input data
+                #      model_clf.sample_weights[0], # how much to weight each sample by
+                #      model_clf.targets[0], # labels
+                #      K.learning_phase(), # train or test mode
                 #     ]
-                #     break
-                # results = zip(weights, get_gradients(input_v))
-                # from IPython import embed
-                # embed()
+                #     from keras.utils.np_utils import to_categorical
+                #     for input_data, y_true in genfun:
+                #         get_gradients = K.function(inputs=input_tensors, outputs=gradients[-8:])
+                #         input_v = [input_data['query'], # X
+                #                   input_data['doc'],
+                #                   np.array([1] * len(input_data['query'])), # sample weights
+                #                   y_true, # y
+                #                   0 # learning phase in TEST mode
+                #         ]
+                #         break
+                #     results = zip(weights, get_gradients(input_v))
                 print 'Iter:%d\tloss=%.6f' % (i_e, history.history['loss'][0])
 
         for tag, generator in eval_gen.items():
